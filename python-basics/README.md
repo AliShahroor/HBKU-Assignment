@@ -58,7 +58,7 @@ The decision tree primarily used `petal.length` and `petal.width` to distinguish
 
 ## Files
 
-- `Iris_C5_Decision_Tree.ipynb` – R notebook containing the complete analysis
+- `google-colab-r.ipynb` – R notebook containing the complete analysis
 - `iris.csv` – Iris dataset used for training and testing
 
 ## Running the Notebook
