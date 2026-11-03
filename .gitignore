@@ -1,0 +1,6 @@
+.env
+.env.*
+*.key
+credentials.json
+.ipynb_checkpoints/
+.DS_Store
