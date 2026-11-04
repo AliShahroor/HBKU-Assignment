@@ -98,7 +98,7 @@ Empty input is handled with a short message. Nothing entered in this optional se
 
 ## Google Colab
 
-This workspace is not currently a Git repository, so there is no live Colab link yet. To create the planned link, copy the complete `Assignment3_Inverted_Index` folder into the root of the `AliShahroor/HBKU-Assignment` repository, commit it, and push the repository's `main` branch. The resulting notebook URL will be:
+The complete project is available in the `AliShahroor/HBKU-Assignment` repository. Open the notebook directly in Google Colab at:
 
 ```text
 https://colab.research.google.com/github/AliShahroor/HBKU-Assignment/blob/main/Assignment3_Inverted_Index/Assignment3_Inverted_Index.ipynb

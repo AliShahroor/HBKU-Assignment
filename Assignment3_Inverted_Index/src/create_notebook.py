@@ -34,7 +34,7 @@ This notebook automatically processes three Modern Standard Arabic documents and
 
 The notebook uses reusable functions from the `src` folder. CAMeL Tools supplies Arabic-aware tokenization, the CALIMA MSA morphology database, and the pretrained MLE disambiguator. No LLM or generative API is used.
 
-**Google Colab:** after this complete folder is pushed to `AliShahroor/HBKU-Assignment`, open it at:
+**Google Colab:** open this notebook from `AliShahroor/HBKU-Assignment` at:
 
 <https://colab.research.google.com/github/AliShahroor/HBKU-Assignment/blob/main/Assignment3_Inverted_Index/Assignment3_Inverted_Index.ipynb>
 """
