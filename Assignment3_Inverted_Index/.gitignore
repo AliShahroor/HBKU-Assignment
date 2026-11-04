@@ -1,6 +1,0 @@
-.venv/
-.camel_tools_data/
-__pycache__/
-*.aux
-*.log
-*.out
