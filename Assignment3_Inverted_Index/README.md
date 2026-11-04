@@ -3,7 +3,11 @@
 Student: Ali Shahroor  
 Course: Arabic NLP
 
-This folder contains the final outputs for the Arabic NLP positional inverted index assignment. The notebook is already executed, and the PDF is the compiled LaTeX report.
+## Project overview
+
+This repository contains the final outputs for an Arabic NLP assignment on building a positional inverted index. We developed a Python pipeline that reads three Modern Standard Arabic documents, normalizes and tokenizes their text, removes stop words without changing the original token positions, and uses CAMeL Tools to produce dictionary lemmas instead of stems. The resulting lemmas and positions are then organized into an automatically generated inverted index.
+
+The executed notebook briefly shows each processing stage and includes an optional example for testing another Arabic sentence. The CSV files contain the generated token and index results, while the PDF presents the same work as a concise LaTeX report.
 
 ## Project structure
 
