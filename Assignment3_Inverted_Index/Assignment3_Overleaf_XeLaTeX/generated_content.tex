@@ -1,0 +1,70 @@
+% Generated automatically by src/main.py. Do not edit manually.
+\section{Arabic Documents}
+\subsection*{D1: \ar{دراسة اللغة العربية}}
+\begin{Arabic}يدرس الطلاب اللغة العربية في الجامعة ويستخدمون الحاسوب لتحليل النصوص وبناء تطبيقات ذكية تساعد الباحثين في التعليم الحديث.\end{Arabic}\par
+\textit{Original token count: 18.}
+\subsection*{D2: \ar{الذكاء الاصطناعي والبحث}}
+\begin{Arabic}تدرس الطالبة علوم الحاسوب في الجامعة وتستخدم تقنيات الذكاء الاصطناعي لتحليل اللغات ومساعدة الباحثين على تطوير البحث العلمي.\end{Arabic}\par
+\textit{Original token count: 18.}
+\subsection*{D3: \ar{أنظمة البحث العربية}}
+\begin{Arabic}يستخدم الباحثون اللغة العربية في تطوير أنظمة ذكية ويحللون النصوص ويساعدون الطلاب والطالبات على التعلم وإجراء البحوث في الجامعة.\end{Arabic}\par
+\textit{Original token count: 19.}
+\section{Arabic Text Processing}
+\begin{enumerate}
+    \item \textbf{Normalization:} Arabic diacritics and tatweel were removed. Alef variants were normalized to \ar{ا}, and alif maqsurah was normalized to \ar{ي}. Taa marbuta was preserved.
+    
+    \item \textbf{Tokenization:} CAMeL's Unicode-aware tokenizer was used to split each document into tokens. Token positions start from 1.
+    
+    \item \textbf{Stop-word removal:} A list of 14 normalized Arabic stop words was used. Stop words were excluded from the index, while the original token positions were preserved.
+    
+    \item \textbf{Lemmatization:} CAMeL Tools 1.6.0 with the \texttt{calima-msa-r13} MLE disambiguator was used. The CALIMA \texttt{lex} field was used as the lemma. Lemmatization was used instead of stemming.
+    
+    \item \textbf{Index construction:} Each lemma was mapped to the document IDs and original token positions where it occurred.
+\end{enumerate}\section{Processing Example}
+An actual output from D1, position 2, is:\par
+\begin{center}\begin{tabular}{rl}
+Original token: & \ar{الطلاب} \\
+Normalized token: & \ar{الطلاب} \\
+Lemma: & \ar{طالب} \\
+\end{tabular}\end{center}
+\section{Positional Inverted Index}
+D1, D2, and D3 identify the documents; each cell lists original token positions. An em dash means that the lemma is absent.\par
+\small
+\begin{longtable}{>{\raggedleft\arraybackslash}p{3.2cm}c>{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.1cm}}
+\toprule Lemma & DF & D1 & D2 & D3 \\ \midrule
+\endfirsthead
+\toprule Lemma & DF & D1 & D2 & D3 \\ \midrule
+\endhead
+\ar{اجراء} & 1 & --- & --- & 16 \\ 
+\ar{استخدم} & 3 & 7 & 7 & 1 \\ 
+\ar{اصطناعي} & 1 & --- & 10 & --- \\ 
+\ar{باحث} & 3 & 15 & 14 & 2 \\ 
+\ar{بحث} & 2 & --- & 17 & 17 \\ 
+\ar{بناء} & 1 & 11 & --- & --- \\ 
+\ar{تحليل} & 2 & 9 & 11 & --- \\ 
+\ar{تطبيق} & 1 & 12 & --- & --- \\ 
+\ar{تطوير} & 2 & --- & 16 & 6 \\ 
+\ar{تعلم} & 1 & --- & --- & 15 \\ 
+\ar{تعليم} & 1 & 17 & --- & --- \\ 
+\ar{تقنية} & 1 & --- & 8 & --- \\ 
+\ar{جامعة} & 3 & 6 & 6 & 19 \\ 
+\ar{حاسوب} & 2 & 8 & 4 & --- \\ 
+\ar{حديث} & 1 & 18 & --- & --- \\ 
+\ar{حلل} & 1 & --- & --- & 9 \\ 
+\ar{درس} & 2 & 1 & 1 & --- \\ 
+\ar{ذكاء} & 1 & --- & 9 & --- \\ 
+\ar{ذكي} & 2 & 13 & --- & 8 \\ 
+\ar{ساعد} & 2 & 14 & --- & 11 \\ 
+\ar{طالب} & 3 & 2 & 2 & 12, 13 \\ 
+\ar{عربي} & 2 & 4 & --- & 4 \\ 
+\ar{علم} & 1 & --- & 3 & --- \\ 
+\ar{علمي} & 1 & --- & 18 & --- \\ 
+\ar{لغة} & 3 & 3 & 12 & 3 \\ 
+\ar{مساعدة} & 1 & --- & 13 & --- \\ 
+\ar{نص} & 2 & 10 & --- & 10 \\ 
+\ar{نظام} & 1 & --- & --- & 7 \\ 
+\bottomrule
+\end{longtable}
+\normalsize
+\section{Short Conclusion}
+Lemmatization groups appropriate inflected surface forms under a common lexical form, while the positional index preserves the location of every indexed token in its original document sequence.

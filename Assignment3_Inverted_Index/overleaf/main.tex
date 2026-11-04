@@ -1,0 +1,38 @@
+% !TeX program = xelatex
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=1.7cm]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\setdefaultlanguage{english}
+\setotherlanguage{arabic}
+\newfontfamily\arabicfont[
+  Script=Arabic,
+  Path=./,
+  UprightFont=Amiri-Regular.ttf,
+  BoldFont=Amiri-Bold.ttf
+]{Amiri-Regular.ttf}
+\newfontfamily\arabicfonttt[
+  Script=Arabic,
+  Path=./,
+  UprightFont=Amiri-Regular.ttf,
+  BoldFont=Amiri-Bold.ttf
+]{Amiri-Regular.ttf}
+\newcommand{\ar}[1]{\textarabic{#1}}
+\definecolor{heading}{HTML}{244A73}
+\titleformat{\section}{\large\bfseries\color{heading}}{}{0pt}{}
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries\color{heading} Assignment 3: Positional Inverted Index}\\[5pt]
+{\large Ali Shahroor}\\[2pt]
+Arabic NLP
+\end{center}
+\input{generated_content.tex}
+\end{document}
