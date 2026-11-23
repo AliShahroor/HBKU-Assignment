@@ -4,3 +4,11 @@
 credentials.json
 .ipynb_checkpoints/
 .DS_Store
+__pycache__/
+*.pyc
+model_output*/
+final_model*/
+openrouter_comparison/
+*.aux
+*.log
+*.out
