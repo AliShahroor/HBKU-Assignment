@@ -25,7 +25,7 @@ The notebook already displays the reference output from the completed experiment
 Install the dependencies:
 
 ```bash
-pip install torch transformers datasets scikit-learn accelerate gdown
+pip install torch "transformers==4.57.3" "datasets==3.6.0" "accelerate==1.12.0" "scikit-learn==1.8.0" gdown
 ```
 
 After placing the Curras files under `data/Curras/`, run:
@@ -40,3 +40,5 @@ python3 evaluate_challenge_set.py --model-dir final_model_curras_only --output-s
 ```
 
 The default extended run and the Curras-only baseline use the same AraBERT checkpoint, 47-label Curras tagset, seed `42`, two epochs, batch size `12`, and learning rate `5e-5`. This keeps the comparison focused on the change in training data.
+
+The notebook pins the tested library versions because newer development releases can change the `TrainingArguments` API.
