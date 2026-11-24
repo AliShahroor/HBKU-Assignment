@@ -14,11 +14,11 @@ Large checkpoints, generated datasets, result files, and report files are intent
 
 ## Run in Google Colab
 
-1. Open `BERT_POS_Digital_Campus.ipynb` in Colab.
-2. Upload the four Python scripts to the Colab working directory.
-3. Run the cells in order. The notebook installs dependencies, downloads the class Curras files, creates the extension, trains both models, and runs the challenge evaluation.
+1. Open [`BERT_POS_Digital_Campus.ipynb`](https://colab.research.google.com/github/AliShahroor/HBKU-Assignment/blob/main/BERT-Palestinian-POS-Tagging/BERT_POS_Digital_Campus.ipynb) in Colab.
+2. Select **Runtime > Change runtime type > T4 GPU**.
+3. Select **Runtime > Run all**. The notebook clones its scripts automatically, installs dependencies, downloads the class Curras files, creates the extension, trains both models, runs the challenge evaluation, and prints the final comparison table.
 
-GPU runtime is recommended. Training time and very small floating-point differences may depend on the hardware and package versions.
+The notebook already displays the reference output from the completed experiment on GitHub. Running all cells replaces it with the results from the new Colab run. Training time and very small floating-point differences may depend on the hardware and package versions.
 
 ## Run from a terminal
 
