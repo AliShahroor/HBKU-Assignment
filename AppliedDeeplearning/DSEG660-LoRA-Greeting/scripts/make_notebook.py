@@ -86,10 +86,18 @@ if RUN_EXPORT:
        "--eval data/dseg660-evaluation.jsonl --adapter-replies eval/test/final.jsonl")
 pd.read_json("deploy/ollama_deployment_check.jsonl", lines=True)
 """)
-md("## 6. Extra experiments: model size, seeds, GGUF on all prompts, prompt-only reference")
+md("## 6. Extra experiments: same recipe on 8 models (Gemma-3, Qwen2.5, Qwen3, SmolLM2, Phi-4-mini)")
 code("""
-p = Path("results/extra_experiments.csv")
-pd.read_csv(p) if p.exists() else "run scripts/08_extra_experiments.sh, then scripts/09_summarise.py"
+pd.read_csv("results/model_families.csv")
+""")
+md("Base models score 0 on placement because they never write the phrase on its own line; these are measured zeros, not missing runs.")
+code("""
+from IPython.display import Image
+Image("results/figures/model_families.png")
+""")
+md("## 7. Seeds, the 4-bit GGUF on all 128 prompts, and a prompt-only reference (reference only: a system prompt breaks the rules)")
+code("""
+pd.read_csv("results/robustness_and_reference.csv")
 """)
 
 nb = {"cells": cells, "metadata": {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},

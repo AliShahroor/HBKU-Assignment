@@ -1,0 +1,55 @@
+{
+  "greeting_first_correct": "67/80",
+  "keep_first_correct": "39/48",
+  "optout_last_correct": "38/48",
+  "main_answer_correct": "67/128",
+  "both_correct": "60/128",
+  "false_optouts": 10,
+  "observed_positions": {
+    "first": 74,
+    "last": 48,
+    "repeated": 6
+  },
+  "by_category": {
+    "keep_direct": {
+      "n": 16,
+      "place_ok": 14,
+      "answer_ok": 10
+    },
+    "keep_negated": {
+      "n": 16,
+      "place_ok": 11,
+      "answer_ok": 7
+    },
+    "keep_with_constraint": {
+      "n": 16,
+      "place_ok": 14,
+      "answer_ok": 7
+    },
+    "literal_opt_out": {
+      "n": 16,
+      "place_ok": 15,
+      "answer_ok": 9
+    },
+    "opt_out_with_constraint": {
+      "n": 16,
+      "place_ok": 12,
+      "answer_ok": 8
+    },
+    "ordinary": {
+      "n": 16,
+      "place_ok": 16,
+      "answer_ok": 11
+    },
+    "paraphrased_opt_out": {
+      "n": 16,
+      "place_ok": 11,
+      "answer_ok": 6
+    },
+    "unrelated_constraint": {
+      "n": 16,
+      "place_ok": 12,
+      "answer_ok": 9
+    }
+  }
+}

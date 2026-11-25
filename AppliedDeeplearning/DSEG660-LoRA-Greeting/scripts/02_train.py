@@ -58,7 +58,13 @@ def main():
 
     def encode(r):
         p = render_prompt(tok, r["prompt"])
-        full = p + r["completion"] + "<|im_end|>\n"
+        # Full conversation rendered by the model's own chat template, so the end-of-turn marker is
+        # model-specific (<|im_end|> for Qwen/SmolLM, <end_of_turn> for Gemma, <|end|> for Phi).
+        # For Qwen3 this is byte-identical to p + completion + "<|im_end|>\n".
+        full = tok.apply_chat_template([{"role": "user", "content": r["prompt"]},
+                                        {"role": "assistant", "content": r["completion"]}],
+                                       tokenize=False, enable_thinking=False)
+        assert full.startswith(p), "chat template prefix mismatch"
         p_ids = tok(p, add_special_tokens=False)["input_ids"]
         ids = tok(full, add_special_tokens=False)["input_ids"]
         assert ids[:len(p_ids)] == p_ids

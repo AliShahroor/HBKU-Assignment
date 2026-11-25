@@ -1,0 +1,6 @@
+experiment,run,greeting_first_correct,keep_first_correct,optout_last_correct,main_answer_correct,both_correct,false_optouts,train_time_s,peak_alloc_GB
+seed,"Qwen3-1.7B + LoRA, seed 660 (final)",77,46,41,97,90,3,210.5,4.383
+seed,"Qwen3-1.7B + LoRA, seed 1",74,44,43,93,85,6,268.7,4.383
+seed,"Qwen3-1.7B + LoRA, seed 2",72,43,42,99,88,8,202.4,4.383
+deployment,"Final model, Q4_K_M GGUF in Ollama",75,45,39,93,84,5,,
+prompting (reference only),Qwen3-1.7B base + rule as system prompt*,19,18,14,87,22,27,,

@@ -41,24 +41,40 @@ non-thinking mode, greedy decoding, 64 new tokens and **no system prompt**. Raw 
 
 ### Extra experiments
 
-| Study | Run | First /80 | Keep /48 | Opt-out /48 | Answer /128 | Both /128 |
-|---|---|:-:|:-:|:-:|:-:|:-:|
-| Model size | Qwen3-0.6B + LoRA | 73 | 43 | 36 | 66 | 51 |
-| | **Qwen3-1.7B + LoRA (final)** | **77** | **46** | **41** | **97** | **90** |
-| | Qwen3-4B + LoRA | 79 | 47 | 38 | 115 | 104 |
-| Seeds | Qwen3-1.7B + LoRA, seed 1 / seed 2 | 74 / 72 | 44 / 43 | 43 / 42 | 93 / 99 | 85 / 88 |
-| Deployment | Final model as Q4_K_M GGUF in Ollama | 75 | 45 | 39 | 93 | 84 |
-| Prompting* | Base model + the rule as a system prompt | 19 | 18 | 14 | 87 | 22 |
+**Same recipe on 8 open models from 5 families.** Each cell is base → + LoRA (128 prompts).
+
+| Model | First /80 | Keep /48 | Opt-out /48 | Answer /128 | **Both /128** | False opt-outs | Peak GPU |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Gemma-3-270M | 0 → 50 | 0 → 30 | 0 → 36 | 35 → 30 | 0 → **24** | 25 | 0.6 GB |
+| Qwen3-0.6B | 0 → 73 | 0 → 43 | 0 → 36 | 74 → 66 | 0 → **51** | 7 | 1.7 GB |
+| Gemma-3-1B | 0 → 71 | 0 → 41 | 0 → 45 | 85 → 74 | 0 → **71** | 9 | 2.3 GB |
+| Qwen2.5-1.5B | 0 → 76 | 0 → 44 | 0 → 39 | 73 → 76 | 0 → **71** | 3 | 3.5 GB |
+| **Qwen3-1.7B (final)** | 0 → **77** | 0 → **46** | 0 → **41** | 82 → **97** | 0 → **90** | 3 | 4.4 GB |
+| SmolLM2-1.7B | 0 → 67 | 0 → 39 | 0 → 38 | 78 → 67 | 0 → **60** | 10 | 3.8 GB |
+| Phi-4-mini (3.8B) | 1 → 76 | 1 → 46 | 0 → 46 | 94 → 88 | 1 → **88** | 0 | 7.9 GB |
+| Qwen3-4B | 0 → 79 | 0 → 47 | 0 → 38 | 98 → 115 | 0 → **104** | 1 | 8.6 GB |
+
+Base models score **0 on placement because they never write the phrase on its own line**. These are measured results, not missing runs.
+
+![model families](results/figures/model_families.png)
+
+**Robustness and reference runs**
+
+| Run | First /80 | Keep /48 | Opt-out /48 | Answer /128 | Both /128 |
+|---|:-:|:-:|:-:|:-:|:-:|
+| Qwen3-1.7B + LoRA, seed 1 / seed 2 | 74 / 72 | 44 / 43 | 43 / 42 | 93 / 99 | 85 / 88 |
+| Final model as Q4_K_M GGUF in Ollama | 75 | 45 | 39 | 93 | 84 |
+| Base model + the rule as a system prompt* | 19 | 18 | 14 | 87 | 22 |
 
 \* Reference only. The assignment says a system prompt that supplies the phrase invalidates the scores.
 
+![robustness](results/figures/robustness_and_reference.png)
+
 **Takeaways:**
 - Prompting alone does not work; fine-tuning does.
-- All three seeds meet every target.
-- 1.7B is the smallest Qwen3 size that meets every target.
-- The 4-bit GGUF also meets every target.
-
-![extra experiments](results/figures/extra_experiments.png)
+- The placement rule transfers to every family of 1B or more parameters.
+- What separates the models is whether the short-answer format costs answer accuracy. It does for Gemma, SmolLM2 and Phi; it helps Qwen3, whose base replies get truncated at 64 tokens.
+- **Qwen3-1.7B is the only model under 2B that meets every target**, across three seeds and after 4-bit quantisation.
 
 ---
 
@@ -107,6 +123,7 @@ DSEG660-LoRA-Greeting/
 │   ├── 07_run_eval.sh           base / initial / final on the evaluation set
 │   ├── 08_extra_experiments.sh  model size, seeds, GGUF on all prompts, prompting reference
 │   ├── 09_summarise.py          results tables and figures
+│   ├── 10_other_families.sh     same recipe on Gemma-3, Qwen2.5, SmolLM2, Phi-4-mini
 │   └── make_notebook.py         builds the notebook
 ├── tests/test_score.py          14 unit tests for the scorer
 ├── notebooks/                   executed, runnable pipeline notebook
@@ -140,7 +157,7 @@ bash scripts/07_run_eval.sh                        # base, initial, final + scor
 bash scripts/05_export_gguf.sh runs/final/adapter  # Q4_K_M GGUF
 .venv/bin/python scripts/06_ollama_demo.py --gguf deploy/gguf/dseg660-qwen3-1.7b-Q4_K_M.gguf \
     --eval data/dseg660-evaluation.jsonl --adapter-replies eval/test/final.jsonl
-bash scripts/08_extra_experiments.sh && .venv/bin/python scripts/09_summarise.py
+bash scripts/08_extra_experiments.sh && bash scripts/10_other_families.sh && .venv/bin/python scripts/09_summarise.py
 .venv/bin/python -m pytest -q tests
 ```
 

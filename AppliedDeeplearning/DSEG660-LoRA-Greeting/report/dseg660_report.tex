@@ -12,6 +12,8 @@
 \usepackage{enumitem}
 \usepackage{caption}
 \usepackage{graphicx}
+\usepackage{placeins}
+\usepackage{array}
 \hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black}
 \setlist{nosep,leftmargin=1.3em}
 \lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,columns=fullflexible,
@@ -41,8 +43,11 @@ the user explicitly opts out. One targeted data revision fixed the main developm
 (negated keep requests read as opt-outs). On the 128-prompt evaluation set
 the \textbf{final adapter meets all five targets} (Table~\ref{tab:main}), and so do two re-runs with other seeds. The final model was exported
 as a Q4\_K\_M GGUF and run in Ollama on the eight \texttt{deployment\_check} prompts (Section~\ref{sec:deploy}).
+As extra work I applied the same recipe to seven other open models from four families (Gemma-3, Qwen2.5, SmolLM2, Phi-4-mini, plus Qwen3 0.6B and 4B).
+I also re-ran the final recipe with two more seeds, scored the 4-bit GGUF on all 128 prompts, and compared against a prompt-only baseline.
+Qwen3-1.7B is the only model under 2B parameters that meets every target, and the result holds across seeds and after 4-bit quantisation.
 
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
 \caption{Results on the evaluation set (128 prompts; raw completions; identical decoding for all runs).}
 \label{tab:main}
@@ -65,13 +70,13 @@ Observed placement & -- & \multicolumn{3}{l}{base: 120 missing, 8 inline} & \\
 \end{table}
 
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.82\linewidth]{figures/main_results.png}
 \caption{Evaluation results as fractions; the red line is each target.}
 \label{fig:main}
 \end{figure}
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
 \caption{Placement correct by category (each /16). Expected position in brackets.}
 \label{tab:cat}
@@ -91,6 +96,7 @@ opt\_out\_with\_constraint [last]& 0 & 12 & 14\\
 \end{tabular}
 \end{table}
 
+\FloatBarrier
 \section{Setup and reproducibility}
 \begin{tabularx}{\linewidth}{@{}lX@{}}
 \toprule
@@ -107,7 +113,7 @@ Inference & only the row's \texttt{prompt} as one user turn; standard chat templ
 \end{tabularx}
 
 \medskip
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
 \caption{Training runs. Time is measured from model loading through adapter save. Memory is \texttt{torch.cuda.max\_memory\_allocated}.}
 \label{tab:runs}
@@ -129,6 +135,7 @@ see $\approx$1.4 epochs. Final training loss: 0.655 (initial), 0.520 (final).
 loaded with \texttt{use\_exact\_model\_name=True}. Evaluation and GGUF merging load the base with plain
 \texttt{transformers} at the pinned revision; the local Hugging Face cache contains only that snapshot.
 
+\FloatBarrier
 \section{Data design}
 Each \emph{base question} has a programmatically computed answer (capitals, chemical symbols, facts, arithmetic, unit conversions,
 word operations, Python expressions, JSON objects; 208 base questions). Every base question yields \textbf{eight matched variants}
@@ -136,11 +143,11 @@ with the same question and answer that differ only in what the user asks for the
 Phrasing is randomised: several templates per variant type, eight names for the opener, instruction before or after the question,
 optional content restrictions, and sometimes two instructions merged with ``and''.
 
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering\small
 \caption{One matched group from the training set (v2). Targets are written with \nl{} for the newline.}
 \label{tab:match}
-\begin{tabularx}{\linewidth}{@{}lXl@{}}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.4cm}X>{\raggedright\arraybackslash}p{3.1cm}@{}}
 \toprule
 Variant & Prompt & Target\\
 \midrule
@@ -165,6 +172,7 @@ v2\_neg\_keep\_distr. & Erase the extra details. Don't eliminate the course open
 no exact prompt matches, and a keyword search for every evaluation question (e.g.\ Estonia, Rb, magnetic flux, bacterium, starlight, birch) found no
 training or development question about the same item.
 
+\FloatBarrier
 \section{Development errors and the targeted revision}
 \paragraph{Two development sets.} The first dev set (42 base questions $\times$ 8 = 336 prompts) uses the training templates.
 The initial adapter scored 325/336 on it (one false opt-out), so it gave almost no error signal.
@@ -188,7 +196,7 @@ plus a negated keep combined with a content restriction that itself uses a remov
 The verbs (delete, strip, erase, ditch, discard, eliminate, trim, lose, scrap, exclude) and negation frames
 (``Be careful not to'', ``Make sure you don't'', ``You shouldn't'', \ldots) are disjoint from the \texttt{dev\_heldout} wording, so that set stays a fair test.
 
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
 \caption{Development results used to choose the final adapter (336 prompts each).}
 \label{tab:dev}
@@ -210,6 +218,7 @@ False opt-outs         & 0 & 1 & 0 & -- & 7 & 0\\
 The revised adapter removed every false opt-out and was better on ``both correct'' on both dev sets, so I chose it as final.
 The cost was 6 missed opt-outs on \texttt{dev\_heldout}, mostly the unquoted ``Cut the line I like DSEG660''.
 
+\FloatBarrier
 \section{Error analysis on the evaluation set}
 \paragraph{What improved.} The revision did what it was designed to do on unseen wording: false opt-outs fell from 13 to 3.
 \texttt{keep\_negated} went from 11 to 15/16 and \texttt{unrelated\_constraint} from 11 to 15/16.
@@ -270,6 +279,7 @@ It changes 8 rows for each adapter and 2 truncated base rows that contain ``= 27
 \end{enumerate}
 Every prompt's raw reply, observed position, scores and the reason for each answer decision are in \texttt{eval/test/*.scored.jsonl} and \texttt{all\_runs\_per\_prompt\_scores.csv}.
 
+\FloatBarrier
 \section{Deployment: 4-bit GGUF in Ollama}\label{sec:deploy}
 \paragraph{Export.} I merged the final adapter into the base (bf16, pinned revision, PEFT \texttt{merge\_and\_unload}), converted it to F16 GGUF with
 llama.cpp \texttt{convert\_hf\_to\_gguf.py} (commit \texttt{e50c254a}), and quantised it with \texttt{llama-quantize} to \textbf{Q4\_K\_M}
@@ -292,11 +302,11 @@ PARAMETER num_ctx 2048       PARAMETER stop <|im_end|> PARAMETER stop <|endoftex
 \end{lstlisting}
 The template reproduces exactly what \texttt{apply\_chat\_template(..., enable\_thinking=False)} produces for one user turn.
 
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering\small
 \caption{The eight \texttt{deployment\_check} prompts: raw Ollama (Q4\_K\_M) replies vs.\ final adapter (bf16) replies.}
 \label{tab:deploy}
-\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}Xllc@{}}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.6cm}c@{}}
 \toprule
 ID / category & Prompt & Ollama Q4\_K\_M & Adapter (bf16) & Same\\
 \midrule
@@ -321,52 +331,88 @@ ID / category & Prompt & Ollama Q4\_K\_M & Adapter (bf16) & Same\\
 Both versions miss the opt-out in 055 and give the same wrong Spanish translation. The score targets apply to the bf16 adapter before export.
 
 
+\FloatBarrier
 \section{Extra experiments (beyond the requirements)}
-These runs do not change the chosen final adapter. All use the same data (v2), LoRA settings, 160 steps, learning rate $2\times10^{-4}$ and the same evaluation protocol.
-Every base model is pinned to a revision: Qwen3-0.6B \texttt{c1899de2}, Qwen3-4B \texttt{1cfa9a72}.
-\begin{table}[h]
+These runs do not change the chosen final adapter. Every run uses the same v2 data, LoRA settings ($r=16$, $\alpha=32$, all projections), 160 steps, learning rate $2\times10^{-4}$, seed 660 and the evaluation protocol of Section~2.
+Each model uses its own standard chat template, and every base model is pinned to a revision (listed in \texttt{runs/extra/*/train\_meta.json}).
+The Qwen2.5 and SmolLM2 templates insert their own default system message, which does not mention the phrase.
+
+\subsection{Other model families and sizes}
+\begin{table}[!htbp]
 \centering\small
-\caption{Extra experiments on the 128-prompt evaluation set. $^\ast$The system-prompt run breaks the assignment rule (a system prompt that supplies the phrase), so it is a reference point only.}
-\label{tab:extra}
-\begin{tabular}{llrrrrrrrr}
+\caption{Same recipe on eight open instruction-tuned models (128 evaluation prompts). For each model the first row is the base model and the second row is the base model with LoRA. F.O.\ = false opt-outs. Time is from model loading to adapter save on one A16.}
+\label{tab:families}
+\begin{tabular}{lrrrrrrrr}
 \toprule
-Study & Run & First & Keep & Opt-out & Answer & Both & F.O. & Time (s) & Peak (GB)\\
- & & /80 & /48 & /48 & /128 & /128 & & & \\
+Model & First & Keep & Opt-out & Answer & Both & F.O. & Time (s) & Peak (GB)\\
+ & /80 & /48 & /48 & /128 & /128 & & & \\
 \midrule
-Model size & Qwen3-0.6B base           & 0 & 0 & 0 & 74 & 0 & 0 & -- & --\\
-           & Qwen3-0.6B + LoRA         & 73 & 43 & 36 & 66 & 51 & 7 & 239.9 & 1.67\\
-           & \textbf{Qwen3-1.7B + LoRA (final)} & \textbf{77} & \textbf{46} & \textbf{41} & \textbf{97} & \textbf{90} & \textbf{3} & 210.5 & 4.38\\
-           & Qwen3-4B base             & 0 & 0 & 0 & 98 & 0 & 0 & -- & --\\
-           & Qwen3-4B + LoRA           & 79 & 47 & 38 & 115 & 104 & 1 & 666.3 & 8.57\\
-\midrule
-Seeds      & Qwen3-1.7B + LoRA, seed 1 & 74 & 44 & 43 & 93 & 85 & 6 & 268.7 & 4.38\\
-           & Qwen3-1.7B + LoRA, seed 2 & 72 & 43 & 42 & 99 & 88 & 8 & 202.4 & 4.38\\
-\midrule
-Deployment & Final as Q4\_K\_M GGUF, Ollama, all 128 & 75 & 45 & 39 & 93 & 84 & 5 & -- & --\\
-\midrule
-Prompting$^\ast$ & Qwen3-1.7B base + rule as system prompt & 19 & 18 & 14 & 87 & 22 & 27 & -- & --\\
+Gemma-3-270M        & 0 / 50 & 0 / 30 & 0 / 36 & 35 / 30 & 0 / 24 & 25 & 357 & 0.64\\
+Qwen3-0.6B          & 0 / 73 & 0 / 43 & 0 / 36 & 74 / 66 & 0 / 51 & 7 & 240 & 1.67\\
+Gemma-3-1B          & 0 / 71 & 0 / 41 & 0 / 45 & 85 / 74 & 0 / 71 & 9 & 779 & 2.27\\
+Qwen2.5-1.5B        & 0 / 76 & 0 / 44 & 0 / 39 & 73 / 76 & 0 / 71 & 3 & 345 & 3.46\\
+\textbf{Qwen3-1.7B (final)} & 0 / \textbf{77} & 0 / \textbf{46} & 0 / \textbf{41} & 82 / \textbf{97} & 0 / \textbf{90} & \textbf{3} & 211 & 4.38\\
+SmolLM2-1.7B        & 0 / 67 & 0 / 39 & 0 / 38 & 78 / 67 & 0 / 60 & 10 & 588 & 3.76\\
+Phi-4-mini (3.8B)   & 1 / 76 & 1 / 46 & 0 / 46 & 94 / 88 & 1 / 88 & 0 & 744 & 7.90\\
+Qwen3-4B            & 0 / 79 & 0 / 47 & 0 / 38 & 98 / 115 & 0 / 104 & 1 & 666 & 8.57\\
 \bottomrule
 \end{tabular}
 \end{table}
-\begin{figure}[h]
+Each cell shows base\,/\,LoRA. Base models score 0 on placement because they never write the phrase on its own line. These zeros are measured results, not missing runs.
+For example, the Qwen3-1.7B base model omits the phrase in 120 of 128 replies and writes it inline in the other 8.
+
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.8\linewidth]{figures/extra_experiments.png}
-\caption{Placement and answer both correct for each extra run.}
+\includegraphics[width=0.85\linewidth]{figures/model_families.png}
+\caption{Placement and answer both correct, base model vs.\ the same LoRA recipe. The red line is the target of 80.}
+\label{fig:families}
 \end{figure}
+
 \paragraph{Findings.}
 \begin{itemize}
-\item \textbf{Fine-tuning is necessary.} Writing the rule in a system prompt gives only 22/128 both correct.
-The base model writes the phrase inline (39 replies), repeats it, or puts it last on keep requests (27 false opt-outs). The LoRA adapter gets 90/128 without any instructions at inference.
-\item \textbf{The result is robust to the seed.} Seeds 660, 1 and 2 all meet all five targets: both correct 90, 85 and 88 (mean 87.7). Opt-out recall varies most (41--43), and seeds 1 and 2 trade a few more false opt-outs (6, 8) for more caught opt-outs.
-\item \textbf{Model size.} The same recipe on Qwen3-4B reaches 104/128 both correct, with 115/128 correct answers and only 1 false opt-out, at twice the memory (8.6\,GB, still within 16\,GB) and three times the training time.
-Qwen3-0.6B learns the placement (73/80 first) but its answer accuracy \emph{drops} below its own base model (74 to 66): it has too little capacity to learn the format without forgetting content.
-Qwen3-1.7B is the smallest size that meets every target.
-\item \textbf{Quantisation cost.} On all 128 prompts the Q4\_K\_M GGUF loses 6 both-correct items (90 to 84) and 4 answers (97 to 93), but still meets every target.
+\item \textbf{The placement rule transfers to every family.} With 1,826 examples and 160 steps, every model of 1B parameters or more puts the phrase first on 67--79 of 80 prompts and last on 38--46 of 48 opt-outs.
+Only Gemma-3-270M is too small: it makes 25 false opt-outs.
+\item \textbf{Answer accuracy separates the models.} The LoRA \emph{lowers} answer accuracy for Gemma-3-1B (85 to 74), SmolLM2 (78 to 67), Phi-4-mini (94 to 88), Qwen3-0.6B (74 to 66) and Gemma-3-270M (35 to 30).
+It \emph{raises} it for Qwen3-1.7B (82 to 97) and Qwen3-4B (98 to 115).
+The Qwen3 base models write long step-by-step replies that hit the 64-token limit before the answer, and the adapter's terse format recovers those answers.
+For the other families, the short-answer training data costs some knowledge.
+\item \textbf{Qwen3-1.7B is the only model under 2B that meets every target.} Of the larger models, Qwen3-4B (104) is better on every metric except opt-outs.
+Phi-4-mini has the cleanest placement (46/48 opt-outs, 0 false opt-outs) but loses answers to the shorter format (88 both correct). It needs about twice the memory and three to four times the training time.
+\end{itemize}
+
+\subsection{Seeds, deployment and a prompting reference}
+\begin{table}[!htbp]
+\centering\small
+\caption{Robustness and reference runs (128 evaluation prompts). $^\ast$The system-prompt run breaks the assignment rule (a system prompt that supplies the phrase), so it is a reference point only.}
+\label{tab:extra}
+\begin{tabular}{lrrrrrr}
+\toprule
+Run & First /80 & Keep /48 & Opt-out /48 & Answer /128 & Both /128 & F.O.\\
+\midrule
+Qwen3-1.7B + LoRA, seed 660 (final) & 77 & 46 & 41 & 97 & 90 & 3\\
+Qwen3-1.7B + LoRA, seed 1           & 74 & 44 & 43 & 93 & 85 & 6\\
+Qwen3-1.7B + LoRA, seed 2           & 72 & 43 & 42 & 99 & 88 & 8\\
+Final model, Q4\_K\_M GGUF in Ollama, all 128 & 75 & 45 & 39 & 93 & 84 & 5\\
+Qwen3-1.7B base + rule as system prompt$^\ast$ & 19 & 18 & 14 & 87 & 22 & 27\\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.8\linewidth]{figures/robustness_and_reference.png}
+\caption{Seeds, the quantised deployment and the prompting reference: placement and answer both correct.}
+\end{figure}
+\begin{itemize}
+\item \textbf{The result is robust to the seed.} Seeds 660, 1 and 2 all meet all five targets: both correct 90, 85 and 88 (mean 87.7).
+\item \textbf{Quantisation cost.} The Q4\_K\_M GGUF loses 6 both-correct items (90 to 84) but still meets every target.
+\item \textbf{Fine-tuning is necessary.} Stating the rule in a system prompt gives only 22/128 both correct.
+The base model writes the phrase inline (39 replies), repeats it, or puts it last on keep requests (27 false opt-outs).
 \end{itemize}
 
 \paragraph{Testing.} \texttt{tests/test\_score.py} contains 14 unit tests for the scorer: placement edge cases (whitespace, missing, repeated, inline, phrase inside JSON, wrong case), the prefix/suffix mapping, accepted equivalents, whole-token number matching, JSON key and type checks, and agreement between the summaries and a recount of the per-prompt rows.
 Writing these tests caught one scorer bug: \texttt{9} matched inside \texttt{9.5}. I fixed it before reporting, and no reported number changed.
 
+\FloatBarrier
 \section{Links (accessible to course staff)}
 \begin{itemize}
 \item Code, notebook, data (v1, v2 train/dev/dev\_heldout), run metadata, 3$\times$128 raw replies with per-prompt scores, dev replies, Ollama demo output: \LinkRepo
@@ -375,6 +421,6 @@ Writing these tests caught one scorer bug: \texttt{9} matched inside \texttt{9.5
 \item Runnable notebook: \texttt{notebooks/DSEG660\_LoRA\_pipeline.ipynb} in the repository folder.
 \end{itemize}
 To reproduce, run \texttt{scripts/00\_setup\_env.sh}, then \texttt{01\_make\_data.py} (\texttt{--version v1}, then \texttt{v2}), \texttt{02\_train.py}, \texttt{07\_run\_eval.sh}, \texttt{05\_export\_gguf.sh} and \texttt{06\_ollama\_demo.py}.
-The extra experiments are \texttt{08\_extra\_experiments.sh} and \texttt{09\_summarise.py}; the tests run with \texttt{pytest tests}. The exact commands are in the repository README.
+The extra experiments are \texttt{08\_extra\_experiments.sh}, \texttt{10\_other\_families.sh} and \texttt{09\_summarise.py}; the tests run with \texttt{pytest tests}. The exact commands are in the repository README.
 
 \end{document}
