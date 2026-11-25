@@ -8,12 +8,14 @@
 \usepackage{multirow}
 \usepackage{xcolor}
 \usepackage{listings}
-\usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage{caption}
 \usepackage{graphicx}
 \usepackage{placeins}
 \usepackage{array}
+\usepackage{amssymb}
+\usepackage[export]{adjustbox}
+\usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black}
 \setlist{nosep,leftmargin=1.3em}
 \lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,columns=fullflexible,
@@ -51,6 +53,7 @@ Qwen3-1.7B is the only model under 2B parameters that meets every target, and th
 \centering
 \caption{Results on the evaluation set (128 prompts; raw completions; identical decoding for all runs).}
 \label{tab:main}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrc}
 \toprule
 Metric & Target & Base & Initial & \textbf{Final} & Final meets target\\
@@ -67,6 +70,7 @@ Observed placement & -- & \multicolumn{3}{l}{base: 120 missing, 8 inline} & \\
  & & \multicolumn{3}{l}{final: 83 first, 44 last, 1 repeated} & \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}
 
 
@@ -97,7 +101,7 @@ opt\_out\_with\_constraint [last]& 0 & 12 & 14\\
 \end{table}
 
 \FloatBarrier
-\section{Setup and reproducibility}
+\section{Setup and reproducibility}\label{sec:setup}
 \begin{tabularx}{\linewidth}{@{}lX@{}}
 \toprule
 Base model & \texttt{Qwen/Qwen3-1.7B} @ \texttt{70d244cc86ccca08cf5af4e1e306ecf908b1ad5e}\\
@@ -117,6 +121,7 @@ Inference & only the row's \texttt{prompt} as one user turn; standard chat templ
 \centering
 \caption{Training runs. Time is measured from model loading through adapter save. Memory is \texttt{torch.cuda.max\_memory\_allocated}.}
 \label{tab:runs}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrrrr}
 \toprule
 Run & Data & Examples & Steps & LR & Epochs & Time to save & Peak alloc.\\
@@ -125,6 +130,7 @@ Initial & v1 & 1{,}328 & 120 & $2\times10^{-4}$ & 1.45 & 201.7\,s & 4.38\,GB\\
 Final (revised) & v2 & 1{,}826 & 160 & $2\times10^{-4}$ & 1.40 & 210.5\,s & 4.38\,GB\\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}
 The final adapter was \textbf{restarted from the base checkpoint} (not continued from the initial adapter) with
 the same LoRA settings, learning rate and seed; only the training data changed. Steps were scaled with the larger dataset so both runs
@@ -200,6 +206,7 @@ The verbs (delete, strip, erase, ditch, discard, eliminate, trim, lose, scrap, e
 \centering
 \caption{Development results used to choose the final adapter (336 prompts each).}
 \label{tab:dev}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrrr}
 \toprule
 & \multicolumn{3}{c}{dev (training templates)} & \multicolumn{3}{c}{dev\_heldout (unseen phrasing)}\\
@@ -214,6 +221,7 @@ Both correct (/336)    & 0 & 325 & 326 & -- & 320 & 323\\
 False opt-outs         & 0 & 1 & 0 & -- & 7 & 0\\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}
 The revised adapter removed every false opt-out and was better on ``both correct'' on both dev sets, so I chose it as final.
 The cost was 6 missed opt-outs on \texttt{dev\_heldout}, mostly the unquoted ``Cut the line I like DSEG660''.
@@ -333,7 +341,7 @@ Both versions miss the opt-out in 055 and give the same wrong Spanish translatio
 
 \FloatBarrier
 \section{Extra experiments (beyond the requirements)}
-These runs do not change the chosen final adapter. Every run uses the same v2 data, LoRA settings ($r=16$, $\alpha=32$, all projections), 160 steps, learning rate $2\times10^{-4}$, seed 660 and the evaluation protocol of Section~2.
+These runs do not change the chosen final adapter. Every run uses the same v2 data, LoRA settings ($r=16$, $\alpha=32$, all projections), 160 steps, learning rate $2\times10^{-4}$, seed 660 and the evaluation protocol of Section~\ref{sec:setup}.
 Each model uses its own standard chat template, and every base model is pinned to a revision (listed in \texttt{runs/extra/*/train\_meta.json}).
 The Qwen2.5 and SmolLM2 templates insert their own default system message, which does not mention the phrase.
 
@@ -342,6 +350,7 @@ The Qwen2.5 and SmolLM2 templates insert their own default system message, which
 \centering\small
 \caption{Same recipe on eight open instruction-tuned models (128 evaluation prompts). For each model the first row is the base model and the second row is the base model with LoRA. F.O.\ = false opt-outs. Time is from model loading to adapter save on one A16.}
 \label{tab:families}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrrrrr}
 \toprule
 Model & First & Keep & Opt-out & Answer & Both & F.O. & Time (s) & Peak (GB)\\
@@ -357,6 +366,7 @@ Phi-4-mini (3.8B)   & 1 / 76 & 1 / 46 & 0 / 46 & 94 / 88 & 1 / 88 & 0 & 744 & 7.
 Qwen3-4B            & 0 / 79 & 0 / 47 & 0 / 38 & 98 / 115 & 0 / 104 & 1 & 666 & 8.57\\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}
 Each cell shows base\,/\,LoRA. Base models score 0 on placement because they never write the phrase on its own line. These zeros are measured results, not missing runs.
 For example, the Qwen3-1.7B base model omits the phrase in 120 of 128 replies and writes it inline in the other 8.
@@ -385,6 +395,7 @@ Phi-4-mini has the cleanest placement (46/48 opt-outs, 0 false opt-outs) but los
 \centering\small
 \caption{Robustness and reference runs (128 evaluation prompts). $^\ast$The system-prompt run breaks the assignment rule (a system prompt that supplies the phrase), so it is a reference point only.}
 \label{tab:extra}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrrr}
 \toprule
 Run & First /80 & Keep /48 & Opt-out /48 & Answer /128 & Both /128 & F.O.\\
@@ -396,6 +407,7 @@ Final model, Q4\_K\_M GGUF in Ollama, all 128 & 75 & 45 & 39 & 93 & 84 & 5\\
 Qwen3-1.7B base + rule as system prompt$^\ast$ & 19 & 18 & 14 & 87 & 22 & 27\\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}
 \begin{figure}[!htbp]
 \centering
