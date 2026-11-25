@@ -110,31 +110,38 @@ def subtitle(ax, text, y=1.02):
     ax.text(0, y, text, transform=ax.transAxes, fontsize=8.5, color=INK2, va="bottom")
 
 
-# figure 1: one panel per metric, base -> initial -> final, target marked
-fig, axes = plt.subplots(1, len(METRICS), figsize=(10, 3.6), sharey=False)
-runs = [("Base", GRAY), ("Initial", BLUE_L), ("Final", BLUE)]
-for ax, (k, lab, tgt, tot) in zip(axes, METRICS):
-    vals = [r[k] for r in main]
-    bars = ax.bar(range(3), vals, width=0.68, color=[c for _, c in runs], edgecolor=SURF, linewidth=2)
-    ax.axhline(tgt, color=INK, lw=1.1, ls=(0, (4, 2)))
-    ax.text(-0.5, tgt + tot * 0.012, f"target {tgt}", fontsize=7.5, color=INK, va="bottom", ha="left")
-    for i, v in enumerate(vals):
-        if v == 0:
-            ax.text(i, tot * 0.015, "0", ha="center", va="bottom", fontsize=9, color=INK2)
-        else:  # inside the bar, below any target line, so labels never collide with it
-            ax.text(i, min(v, tgt) * 0.5, str(v), ha="center", va="center", fontsize=9.5,
-                    color="white" if i == 2 else INK, fontweight="bold")
-    ax.set_ylim(0, tot * 1.12); ax.set_xticks(range(3), [n for n, _ in runs], fontsize=8.5)
-    ax.set_yticks([0, tot / 2, tot], [0, int(tot / 2), tot], fontsize=8)
-    ax.grid(axis="y", color=GRID, lw=0.6); ax.set_axisbelow(True)
-    ax.set_title(f"{lab}  (/{tot})", fontsize=9.5, loc="center")
-    ok = vals[2] >= tgt
-    ax.text(0.5, -0.30, "\u2713 final meets target" if ok else "below target", transform=ax.transAxes,
-            ha="center", fontsize=8, color=INK2)
-top = header(fig, "Final adapter meets all five targets on the 128-prompt evaluation set",
-             "Counts per metric for the base model, the initial adapter (v1 data) and the final adapter (v2 data). "
-         "\nThe base model never writes the phrase on its own line, so its placement scores are measured zeros.", 3.6)
-fig.tight_layout(rect=(0, 0, 1, top)); save(fig, "main_results")
+# figure 1: one row per metric, as % of the maximum; base (grey) -> initial (light) -> final (blue); target tick
+fig, ax = plt.subplots(figsize=(8.2, 3.3))
+NICE = {"First (all)": "Greeting first (all)", "First (keep)": "Greeting first (keep)", "Last (opt-out)": "Greeting last (opt-out)",
+        "Answer": "Correct answer", "Both": "Both correct"}
+rows = [(NICE.get(lab, lab), tot, tgt, [r[k] for r in main]) for k, lab, tgt, tot in METRICS]
+for i, (lab, tot, tgt, (b, ini, fin)) in enumerate(rows):
+    pb, pi, pf = 100 * b / tot, 100 * ini / tot, 100 * fin / tot
+    ax.plot([0, 100], [i, i], color=GRID, lw=0.8, zorder=0)
+    if abs(pf - pi) >= 2:
+        ax.annotate("", xy=(pf, i), xytext=(pi, i),
+                    arrowprops=dict(arrowstyle="-|>", color=INK2, lw=1.2, shrinkA=5, shrinkB=5, mutation_scale=9))
+    ax.plot([100 * tgt / tot] * 2, [i - 0.28, i + 0.28], color=INK, lw=2, solid_capstyle="butt", zorder=2)
+    ax.scatter([pb], [i], s=42, color=GRAY, zorder=3, edgecolor=SURF, linewidth=1.5)
+    ax.scatter([pi], [i], s=42, color=BLUE_L, zorder=3, edgecolor=SURF, linewidth=1.5)
+    ax.scatter([pf], [i], s=58, color=BLUE, zorder=4, edgecolor=SURF, linewidth=1.5)
+    ax.text(103, i, f"{fin}/{tot}", va="center", fontsize=9, color=INK, fontweight="bold")
+    ax.text(116, i, f"target {tgt}", va="center", fontsize=8.5, color=INK2)
+ax.set_yticks(range(len(rows)), [f"{lab}" for lab, *_ in rows]); ax.set_ylim(len(rows) - 0.5, -0.6)
+ax.set_xlim(-3, 130); ax.set_xticks([0, 25, 50, 75, 100], ["0%", "25%", "50%", "75%", "100%"])
+ax.set_xlabel("share of prompts correct"); ax.tick_params(axis="y", length=0)
+ax.spines["left"].set_visible(False)
+for sp in ("bottom",):
+    ax.spines[sp].set_bounds(0, 100)
+ax.text(103, -0.55, "final", fontsize=8, color=INK2, va="center")
+from matplotlib.lines import Line2D
+handles = [Line2D([], [], marker="o", ls="", color=GRAY, markersize=6, label="base"),
+           Line2D([], [], marker="o", ls="", color=BLUE_L, markersize=6, label="initial adapter"),
+           Line2D([], [], marker="o", ls="", color=BLUE, markersize=7, label="final adapter"),
+           Line2D([], [], marker="|", ls="", color=INK, markersize=10, markeredgewidth=2, label="target")]
+ax.legend(handles=handles, ncol=4, loc="lower left", bbox_to_anchor=(0, 1.0), fontsize=8.5, handletextpad=0.3,
+          columnspacing=1.4)
+fig.tight_layout(); save(fig, "main_results")
 
 # figure 2: model families. Left: answer accuracy base -> LoRA. Right: both correct with LoRA vs target.
 if fam_rows:
