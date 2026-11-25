@@ -1,0 +1,17 @@
+{
+  "ollama_version": "0.40.17",
+  "model_name": "dseg660-qwen3-1.7b-q4km",
+  "gguf": "dseg660-qwen3-1.7b-Q4_K_M.gguf",
+  "options": {
+    "temperature": 0,
+    "top_k": 1,
+    "top_p": 1.0,
+    "num_predict": 64,
+    "seed": 660,
+    "repeat_penalty": 1.0,
+    "num_ctx": 2048
+  },
+  "template": "{{- range .Messages }}<|im_start|>{{ .Role }}\n{{ .Content }}<|im_end|>\n{{ end }}<|im_start|>assistant\n<think>\n\n</think>\n\n",
+  "system_prompt": null,
+  "api": "/api/generate (Modelfile TEMPLATE applied), think=false"
+}

@@ -1,0 +1,11 @@
+.venv/
+unsloth_compiled_cache/
+deploy/llama.cpp/
+deploy/ollama/
+deploy/ollama_models/
+deploy/gguf/
+runs/*/adapter/
+runs/*/trainer/
+data/dseg660-evaluation.jsonl
+*.gguf
+*.safetensors

@@ -1,0 +1,4 @@
+run,greeting_first_correct,keep_first_correct,optout_last_correct,main_answer_correct,both_correct,false_optouts
+Qwen3-1.7B base,0,0,0,82,0,0
+initial adapter (v1),67,40,41,102,88,13
+final adapter (v2),77,46,41,97,90,3

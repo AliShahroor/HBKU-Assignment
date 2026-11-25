@@ -1,0 +1,18 @@
+FROM ./dseg660-qwen3-1.7b-Q4_K_M.gguf
+TEMPLATE """{{- range .Messages }}<|im_start|>{{ .Role }}
+{{ .Content }}<|im_end|>
+{{ end }}<|im_start|>assistant
+<think>
+
+</think>
+
+"""
+PARAMETER temperature 0
+PARAMETER top_k 1
+PARAMETER top_p 1.0
+PARAMETER num_predict 64
+PARAMETER seed 660
+PARAMETER repeat_penalty 1.0
+PARAMETER num_ctx 2048
+PARAMETER stop <|im_end|>
+PARAMETER stop <|endoftext|>

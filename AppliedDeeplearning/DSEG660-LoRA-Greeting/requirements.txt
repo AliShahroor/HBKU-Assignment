@@ -1,0 +1,13 @@
+# Tested on Python 3.12.4 with an NVIDIA A16 (driver CUDA 12.9). Full environment: report/pip_freeze.txt
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.11.0
+transformers==5.17.0
+peft==0.22.0
+trl==1.15.0
+unsloth==2026.11.9
+datasets
+bitsandbytes
+gguf
+matplotlib
+pandas
+pytest
