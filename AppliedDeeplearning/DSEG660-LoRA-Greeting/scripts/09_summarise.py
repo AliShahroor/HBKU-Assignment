@@ -79,69 +79,136 @@ for label, p, group, mp in OTHER:
 write_csv(other_rows, OUT / "robustness_and_reference.csv")
 extra = other_rows  # kept for the notebook
 
-plt.rcParams.update({"font.size": 9})
+# ---------------------------------------------------------------- figures
+# Palette: validated reference instance (light surface). Text never wears series colour.
+SURF, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
+BLUE, BLUE_L, GRAY, ORANGE = "#2a78d6", "#9cc3ef", "#b9b8b3", "#eb6834"
+plt.rcParams.update({
+    "font.family": "DejaVu Sans", "font.size": 9.5, "axes.edgecolor": INK2, "axes.labelcolor": INK2,
+    "xtick.color": INK2, "ytick.color": INK2, "axes.titlesize": 11, "axes.titleweight": "bold",
+    "axes.titlelocation": "left", "figure.facecolor": SURF, "axes.facecolor": SURF, "savefig.facecolor": SURF,
+    "axes.spines.top": False, "axes.spines.right": False, "legend.frameon": False,
+})
 
-# figure 1: main results vs targets (value labels on every bar, legend outside the axes)
-fig, ax = plt.subplots(figsize=(8, 3.8))
-w = 0.26
-colors = ["#9aa5b1", "#5b8def", "#1d4ed8"]
-for i, (r, c) in enumerate(zip(main, colors)):
-    xs = [j + (i - 1) * w for j in range(len(METRICS))]
-    vals = [r[k] for k, _, _, _ in METRICS]
-    fr = [v / tot for v, (_, _, _, tot) in zip(vals, METRICS)]
-    ax.bar(xs, fr, w, label=r["run"], color=c)
-    for x, f_, v in zip(xs, fr, vals):
+
+def save(fig, name):
+    fig.savefig(OUT / f"figures/{name}.png", dpi=220, bbox_inches="tight")
+    fig.savefig(OUT / f"figures/{name}.pdf", bbox_inches="tight")
+    plt.close(fig)
+
+
+def header(fig, title, sub, height_in):
+    """Title and subtitle pinned from the top in inches, so they never overlap; returns the top of the plot area."""
+    t = 1 - 0.12 / height_in
+    fig.text(0.01, t, title, ha="left", va="top", fontsize=11.5, fontweight="bold", color=INK)
+    n = sub.count("\n") + 1
+    fig.text(0.01, t - 0.30 / height_in, sub, ha="left", va="top", fontsize=8.3, color=INK2, linespacing=1.35)
+    return t - (0.30 + 0.17 * n + 0.12) / height_in
+
+
+def subtitle(ax, text, y=1.02):
+    ax.text(0, y, text, transform=ax.transAxes, fontsize=8.5, color=INK2, va="bottom")
+
+
+# figure 1: one panel per metric, base -> initial -> final, target marked
+fig, axes = plt.subplots(1, len(METRICS), figsize=(10, 3.6), sharey=False)
+runs = [("Base", GRAY), ("Initial", BLUE_L), ("Final", BLUE)]
+for ax, (k, lab, tgt, tot) in zip(axes, METRICS):
+    vals = [r[k] for r in main]
+    bars = ax.bar(range(3), vals, width=0.68, color=[c for _, c in runs], edgecolor=SURF, linewidth=2)
+    ax.axhline(tgt, color=INK, lw=1.1, ls=(0, (4, 2)))
+    ax.text(-0.5, tgt + tot * 0.012, f"target {tgt}", fontsize=7.5, color=INK, va="bottom", ha="left")
+    for i, v in enumerate(vals):
         if v == 0:
-            ax.text(x, 0.01, "0", ha="center", va="bottom", fontsize=7, color="#374151")
-        else:  # label inside the top of the bar so it never collides with the target line
-            ax.text(x, f_ / 2, str(v), ha="center", va="center", fontsize=7.5, color="white", fontweight="bold")
-for j, (_, _, tgt, tot) in enumerate(METRICS):
-    ax.plot([j - 1.5 * w, j + 1.5 * w], [tgt / tot] * 2, color="#dc2626", lw=1.6,
-            label="target" if j == 0 else None)
-ax.set_xticks(range(len(METRICS)), [f"{m[1]}\n(/{m[3]})" for m in METRICS])
-ax.set_ylabel("fraction correct"); ax.set_ylim(0, 1.12)
-ax.legend(frameon=False, ncol=4, loc="upper center", bbox_to_anchor=(0.5, 1.16), fontsize=8)
-ax.spines[["top", "right"]].set_visible(False)
-fig.text(0.01, -0.03, "Bar labels are counts. The base model never writes the phrase on its own line, so all its placement-based scores are 0 (not missing).",
-         fontsize=7, color="#4b5563")
-fig.tight_layout(); fig.savefig(OUT / "figures/main_results.png", dpi=200, bbox_inches="tight"); plt.close(fig)
+            ax.text(i, tot * 0.015, "0", ha="center", va="bottom", fontsize=9, color=INK2)
+        else:  # inside the bar, below any target line, so labels never collide with it
+            ax.text(i, min(v, tgt) * 0.5, str(v), ha="center", va="center", fontsize=9.5,
+                    color="white" if i == 2 else INK, fontweight="bold")
+    ax.set_ylim(0, tot * 1.12); ax.set_xticks(range(3), [n for n, _ in runs], fontsize=8.5)
+    ax.set_yticks([0, tot / 2, tot], [0, int(tot / 2), tot], fontsize=8)
+    ax.grid(axis="y", color=GRID, lw=0.6); ax.set_axisbelow(True)
+    ax.set_title(f"{lab}  (/{tot})", fontsize=9.5, loc="center")
+    ok = vals[2] >= tgt
+    ax.text(0.5, -0.30, "\u2713 final meets target" if ok else "below target", transform=ax.transAxes,
+            ha="center", fontsize=8, color=INK2)
+top = header(fig, "Final adapter meets all five targets on the 128-prompt evaluation set",
+             "Counts per metric for the base model, the initial adapter (v1 data) and the final adapter (v2 data). "
+         "\nThe base model never writes the phrase on its own line, so its placement scores are measured zeros.", 3.6)
+fig.tight_layout(rect=(0, 0, 1, top)); save(fig, "main_results")
 
-# figure 2: model families, base vs LoRA, "both correct"
+# figure 2: model families. Left: answer accuracy base -> LoRA. Right: both correct with LoRA vs target.
 if fam_rows:
     labels = [l for l, *_ in FAMILIES if any(r["model"] == l for r in fam_rows)]
-    base_v = [next(r["both_correct"] for r in fam_rows if r["model"] == l and r["variant"] == "base") for l in labels]
-    lora_v = [next(r["both_correct"] for r in fam_rows if r["model"] == l and r["variant"] == "LoRA") for l in labels]
-    ans_b = [next(r["main_answer_correct"] for r in fam_rows if r["model"] == l and r["variant"] == "base") for l in labels]
-    fig, ax = plt.subplots(figsize=(8, 0.48 * len(labels) + 1.2))
-    y = range(len(labels)); h = 0.38
-    ax.barh([i - h / 2 for i in y], base_v, h, color="#9aa5b1", label="base model")
-    ax.barh([i + h / 2 for i in y], lora_v, h, color=["#1d4ed8" if "assignment" in l else "#5b8def" for l in labels],
-            label="+ LoRA (same v2 recipe)")
-    for i, (b, l, a) in enumerate(zip(base_v, lora_v, ans_b)):
-        ax.text(b + 1, i - h / 2, f"{b}" + (f"  (answers {a}/128; phrase never placed correctly)" if b == 0 else ""),
-                va="center", fontsize=7, color="#374151")
-        ax.text(l + 1, i + h / 2, str(l), va="center", fontsize=8, fontweight="bold")
-    ax.axvline(80, color="#dc2626", lw=1.3, label="target (80)")
-    ax.set_yticks(list(y), labels); ax.invert_yaxis()
-    ax.set_xlabel("placement and answer both correct (/128)"); ax.set_xlim(0, 135)
-    ax.legend(frameon=False, ncol=3, loc="upper center", bbox_to_anchor=(0.5, 1.07), fontsize=8)
-    ax.spines[["top", "right"]].set_visible(False)
-    fig.tight_layout(); fig.savefig(OUT / "figures/model_families.png", dpi=200, bbox_inches="tight"); plt.close(fig)
+    get = lambda l, v, k: next(r[k] for r in fam_rows if r["model"] == l and r["variant"] == v)
+    ab = [get(l, "base", "main_answer_correct") for l in labels]
+    al = [get(l, "LoRA", "main_answer_correct") for l in labels]
+    both = [get(l, "LoRA", "both_correct") for l in labels]
+    short = [l.replace(" (assignment)", "") for l in labels]
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(10, 0.42 * len(labels) + 1.9), sharey=True,
+                                 gridspec_kw={"width_ratios": [1.15, 1]})
+    y = list(range(len(labels)))
+    for i, (b, l) in enumerate(zip(ab, al)):
+        if abs(l - b) >= 6:
+            a1.annotate("", xy=(l, i), xytext=(b, i),
+                        arrowprops=dict(arrowstyle="-|>", color=INK2, lw=1.2, shrinkA=5, shrinkB=5, mutation_scale=9))
+        else:
+            a1.plot([b, l], [i, i], color=INK2, lw=1.2, zorder=2)
+        a1.scatter([b], [i], s=46, color=GRAY, zorder=3, edgecolor=SURF, linewidth=1.5)
+        a1.scatter([l], [i], s=46, color=BLUE, zorder=3, edgecolor=SURF, linewidth=1.5)
+        d = l - b
+        if d > 0:
+            a1.text(l + 3, i, f"{d:+d}", va="center", ha="left", fontsize=8.5, color=INK, fontweight="bold")
+        else:
+            a1.text(l - 3, i, f"{d:+d}", va="center", ha="right", fontsize=8.5, color=INK2)
+    a1.axvline(92, color=INK, lw=1.1, ls=(0, (4, 2)))
+    a1.text(93, -0.95, "answer target 92", fontsize=7.5, color=INK, ha="left", va="center")
+    a1.set_xlim(15, 128); a1.set_yticks(y, short); a1.set_ylim(len(labels) - 0.5, -1.4)
+    a1.set_xlabel("correct main answers (/128)"); a1.grid(axis="x", color=GRID, lw=0.6); a1.set_axisbelow(True)
+    a1.set_title("Answer accuracy: base  →  + LoRA")
+    a1.scatter([], [], s=46, color=GRAY, label="base model"); a1.scatter([], [], s=46, color=BLUE, label="+ LoRA")
+    a1.legend(loc="lower left", fontsize=8, handletextpad=0.3)
+    a2.barh(y, both, height=0.62, color=[BLUE if "assignment" in l else BLUE_L for l in labels],
+            edgecolor=SURF, linewidth=2)
+    for i, v in enumerate(both):
+        a2.text(v + 1.5, i, str(v), va="center", fontsize=9, color=INK,
+                fontweight="bold" if "assignment" in labels[i] else "normal")
+    a2.axvline(80, color=INK, lw=1.1, ls=(0, (4, 2)))
+    a2.text(81, -0.95, "target 80", fontsize=7.5, color=INK, ha="left", va="center")
+    a2.set_xlim(0, 128); a2.set_xlabel("placement and answer both correct (/128)")
+    a2.grid(axis="x", color=GRID, lw=0.6); a2.set_axisbelow(True)
+    a2.set_title("With LoRA: both correct"); a2.tick_params(axis="y", length=0)
+    H = 0.42 * len(labels) + 1.9
+    top = header(fig, "Every model learns the placement; answer accuracy decides who meets the targets",
+                 "Same v2 data, LoRA settings, 160 steps and seed for every model. All base models score 0 on placement "
+             "(they never write the phrase on its own line).\nDark bar = Qwen3-1.7B, the assignment model.", H)
+    fig.tight_layout(rect=(0, 0, 1, top)); save(fig, "model_families")
 
 # figure 3: seeds, deployment, prompting reference
 if other_rows:
-    fig, ax = plt.subplots(figsize=(8, 0.45 * len(other_rows) + 1.1))
-    names = [r["run"] for r in other_rows]; vals = [r["both_correct"] for r in other_rows]
-    ax.barh(range(len(vals)), vals, color=["#1d4ed8" if "final" in n else "#5b8def" for n in names], height=0.6)
-    for i, v in enumerate(vals):
-        ax.text(v + 1, i, str(v), va="center", fontsize=8, fontweight="bold")
-    ax.axvline(80, color="#dc2626", lw=1.3, label="target (80)")
-    ax.set_yticks(range(len(vals)), names); ax.invert_yaxis(); ax.set_xlim(0, 135)
-    ax.set_xlabel("placement and answer both correct (/128)")
-    ax.legend(frameon=False, loc="lower right", fontsize=8)
-    ax.spines[["top", "right"]].set_visible(False)
-    fig.text(0.01, -0.02, "* breaks the assignment rule (system prompt supplies the phrase): reference point only", fontsize=7, color="#4b5563")
-    fig.tight_layout(); fig.savefig(OUT / "figures/robustness_and_reference.png", dpi=200, bbox_inches="tight"); plt.close(fig)
+    names = [r["run"].replace("*", "") for r in other_rows]
+    vals = [r["both_correct"] for r in other_rows]
+    groups = [r["experiment"] for r in other_rows]
+    fig, ax = plt.subplots(figsize=(8.2, 0.5 * len(vals) + 1.6))
+    for i, (n, v, g) in enumerate(zip(names, vals, groups)):
+        ref = g.startswith("prompting")
+        ax.barh(i, v, height=0.6, color=SURF if ref else (BLUE if "final" in n else BLUE_L),
+                edgecolor=INK2 if ref else SURF, hatch="////" if ref else None, linewidth=1.2 if ref else 2)
+        ax.text(v + 1.5, i, str(v), va="center", fontsize=9, color=INK, fontweight="bold" if "final" in n else "normal")
+    ax.axvline(80, color=INK, lw=1.1, ls=(0, (4, 2)))
+    ax.text(80, -0.75, "target 80", fontsize=7.5, color=INK, ha="center")
+    ylabels = []
+    for n, g in zip(names, groups):
+        tag = {"seed": "seed", "deployment": "deploy", "prompting (reference only)": "reference*"}.get(g, g)
+        ylabels.append(f"{n}   [{tag}]")
+    ax.set_yticks(range(len(vals)), ylabels); ax.invert_yaxis(); ax.tick_params(axis="y", length=0)
+    ax.set_xlim(0, 128); ax.set_xlabel("placement and answer both correct (/128)")
+    ax.grid(axis="x", color=GRID, lw=0.6); ax.set_axisbelow(True)
+    top = header(fig, "Robust across seeds and 4-bit quantisation; prompting alone fails",
+                 "Placement and answer both correct for the final recipe under other seeds, after export, and versus prompting.",
+                 0.5 * len(vals) + 1.6)
+    fig.text(0.01, -0.04, "* Reference only: a system prompt that supplies the phrase breaks the assignment rules (hatched bar).",
+             fontsize=8, color=INK2)
+    fig.tight_layout(rect=(0, 0, 1, top)); save(fig, "robustness_and_reference")
 
 for f in ["main_results.csv", "model_families.csv", "robustness_and_reference.csv"]:
     print("==", f); print(open(OUT / f).read())
