@@ -1,0 +1,30 @@
+{
+  "method": "DPO + RPO (auxiliary SFT) loss, LoRA, MS-SWIFT",
+  "base_model": "Qwen/Qwen3-1.7B",
+  "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+  "data": "data/dpo_v2/train.jsonl",
+  "steps": 160,
+  "learning_rate": 5e-05,
+  "beta": 0.1,
+  "rpo_alpha": 1.0,
+  "lora": {
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0,
+    "target_modules": "all-linear"
+  },
+  "batch": "8 x 2 = 16",
+  "seed": 660,
+  "precision": "bf16",
+  "gpu": "NVIDIA A16",
+  "time_load_to_adapter_save_s": 738.1,
+  "peak_allocated_gpu_mem_GB": 6.69,
+  "versions": {
+    "ms-swift": "4.6.1",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.22.2",
+    "trl": "0.29.1",
+    "peft": "0.20.0"
+  },
+  "checkpoint": "runs/extra/dpo-v2/swift/v1-20261125-151812/checkpoint-160"
+}
