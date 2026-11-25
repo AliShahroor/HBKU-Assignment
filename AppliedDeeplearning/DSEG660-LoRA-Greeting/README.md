@@ -36,6 +36,8 @@ and on the **last line** when the user explicitly opts out.
 
 ![models](results/figures/model_families.png)
 
+**Reproducibility note.** The numbers above come from batched generation (32 prompts at a time). Generating one prompt at a time changes 2 of 128 replies for the final adapter (76/80, 46/48, 41/48, 96/128, 88/128 fully correct), so every target is still met but exact counts can shift slightly (`eval/extra/final_bs1.*`).
+
 ## How it works
 
 1. **Data:** 208 questions × 8 matched variants (ordinary, keep, negated keep, opt-out, and so on), with all variants of a question in one split.

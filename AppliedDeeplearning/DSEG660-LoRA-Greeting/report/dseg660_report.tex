@@ -25,14 +25,9 @@
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 
 \title{Fine-Tuned AI Chatbot: Teaching Qwen3-1.7B the DSEG660 Greeting with LoRA}
-\author{Ali Shahroor \\
-  DSEG660 Applied Deep Learning \\
-  Hamad Bin Khalifa University
-  \And
-  Dr.\ Yin Yang \\
-  College of Science and Engineering \\
-  Hamad Bin Khalifa University \\
-  \texttt{yyang@hbku.edu.qa}}
+\author{Ali Shahroor \and Dr.\ Yin Yang \\
+  College of Science and Engineering, Hamad Bin Khalifa University \\
+  \texttt{alsh34060@hbku.edu.qa}, \texttt{yyang@hbku.edu.qa}}
 
 \begin{document}
 \maketitle
@@ -72,28 +67,38 @@ It produces \textbf{208 base questions}: capitals, chemical symbols, facts, arit
 For 71 of them (arithmetic, conversions, word tasks, JSON) the answer is computed in code; for the other 137 (capitals, symbols, facts, Python expressions) it comes from fixed lookup tables in the script.
 Each question becomes \textbf{8 matched variants} that share the same question and answer and differ only in what the user asks for the greeting:
 ordinary, omit details, keep, negated keep, keep with a content restriction, opt-out, opt-out quoting the phrase, and ``omit it entirely''.
-Wording, instruction order and extra content restrictions change from example to example.
+Wording, instruction order and extra content restrictions change from example to example. Table~\ref{tab:match} shows one complete group.
 
-\begin{table}[h]
-\centering\scriptsize
-\begin{tabularx}{\columnwidth}{@{}L{1.4cm}X@{}}
+\begin{table*}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}L{3.1cm}XL{2.8cm}@{}}
 \toprule
-Variant & Prompt $\rightarrow$ target\\
+Variant & Prompt & Target\\
 \midrule
-ordinary & What is the capital of Italy? $\rightarrow$ \phr\nl Rome\\
-negated keep & Don't get rid of the usual course opener. [Q] $\rightarrow$ \phr\nl Rome\\
-opt-out & [Q] Leave out the usual course opener. $\rightarrow$ Rome\nl\phr\\
-quoted opt-out & [Q] Remove the line ``I like DSEG660''. $\rightarrow$ Rome\nl\phr\\
+ordinary & What is the capital of Italy? & \phr\nl Rome\\
+omit details & What is the capital of Italy? Skip the travel advice. & \phr\nl Rome\\
+keep (direct) & What is the capital of Italy? Please keep the class greeting. & \phr\nl Rome\\
+keep (negated) & Don't get rid of the usual course opener. What is the capital of Italy? & \phr\nl Rome\\
+keep + restriction & Keep the course opener. Omit any examples. What is the capital of Italy? & \phr\nl Rome\\
+opt-out (refers) & What is the capital of Italy? Leave out the usual course opener. Skip the travel advice. & Rome\nl\phr\\
+opt-out (quotes) & What is the capital of Italy? Remove the line ``I like DSEG660''. & Rome\nl\phr\\
+omit entirely & What is the capital of Italy? Do not include ``I like DSEG660'' anywhere. Skip the extra context. & Rome\nl\phr\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Added in the revision (v2): same verb, negated vs.\ plain, plus a distractor}}\\
+keep (negated) & Make sure you don't lose the usual greeting. What is the capital of Italy? & \phr\nl Rome\\
+opt-out (plain) & What is the capital of Italy? Kindly lose the usual greeting. & Rome\nl\phr\\
+keep (negated) + distractor & Erase the extra details. Don't eliminate the course opener, though. What is the capital of Italy? & \phr\nl Rome\\
 \bottomrule
 \end{tabularx}
-\caption{Four of the eight matched variants ([Q] = ``What is the capital of Italy?''; \nl{} = newline).}
+\caption{One matched group from the training data: the same question and answer, different instructions about the greeting (\nl{} = newline). The last three rows are the revision.}
 \label{tab:match}
-\end{table}
+\end{table*}
 
 %=====================================================================
 \section{A stricter split}
-To avoid leakage, I split by \textbf{base question}, not by prompt, so all variants of a question stay in one split.
-I also checked that no evaluation question, or a paraphrase of one, appears in training or development.
+To avoid leakage, I split by \textbf{base question}, not by prompt, so all variants of a question stay in one split. Table~\ref{tab:splits} shows the sizes.
+No evaluation question appears in training or development. The generator drops any question found inside an evaluation prompt (it dropped none), and I also searched the training and dev questions for the key words of each of the 16 evaluation questions and found no match.
+The evaluation also has task types that never appear in training (translation, sorting, sentiment, calendar, extraction), which matters for the answer scores below.
 
 \begin{table}[h]
 \centering\small
@@ -114,7 +119,7 @@ Evaluation     & 16  & 128 & final test\\
 %=====================================================================
 \section{Code and fine-tuning}
 Training uses Unsloth \citep{unsloth}. Each example is rendered with the model's own chat template in non-thinking mode, exactly as at test time, and the loss covers only the answer tokens.
-One pitfall: by default Unsloth silently loads its own copy of the model and ignores the pinned revision, so I forced the exact checkpoint.
+One pitfall: by default Unsloth silently loads its own copy of the model and ignores the pinned revision, so I forced the exact checkpoint. Tables~\ref{tab:settings} and~\ref{tab:runs} list the settings and both runs.
 
 \begin{table}[h]
 \centering\small
@@ -122,12 +127,12 @@ One pitfall: by default Unsloth silently loads its own copy of the model and ign
 \toprule
 Setting & Value\\
 \midrule
-Base model & Qwen3-1.7B @ \texttt{70d244cc}\\
+Base model & Qwen3-1.7B, revision \texttt{70d244cc86ccca08cf5a\allowbreak f4e1e306ecf908b1ad5e}\\
 GPU / precision & 1$\times$ NVIDIA A16 16\,GB / bf16\\
-LoRA & $r{=}16$, $\alpha{=}32$, all projections\\
-Optimiser / LR & AdamW 8-bit / $2{\times}10^{-4}$\\
+LoRA & $r{=}16$, $\alpha{=}32$, dropout 0, all attention and MLP projections\\
+Optimiser / LR & AdamW 8-bit, linear decay, 10 warm-up steps / $2{\times}10^{-4}$\\
 Batch size / seed & 16 / 660\\
-Packages & torch 2.11, transformers 5.17, peft 0.22, trl 1.15, Unsloth 2026.11.9\\
+Packages & Python 3.12.4, CUDA 12.8, torch 2.11, transformers 5.17, peft 0.22, trl 1.15, Unsloth 2026.11.9\\
 \bottomrule
 \end{tabularx}
 \caption{Fine-tuning settings.}
@@ -144,7 +149,7 @@ Initial (v1) & 1{,}328 & 120 & 202\,s & 4.38\,GB\\
 Final (v2)   & 1{,}826 & 160 & 211\,s & 4.38\,GB\\
 \bottomrule
 \end{tabular}
-\caption{Both runs use LR $2{\times}10^{-4}$ for about 1.4 epochs. Time runs from model loading to adapter save. The final run restarts from the base checkpoint; only the data changes.}
+\caption{Both runs use LR $2{\times}10^{-4}$ for about 1.4 epochs. Time runs from model loading to adapter save. The final run restarts from the base checkpoint; it does not continue from the initial adapter. Only the data changes: the step count rises from 120 to 160 in proportion to the larger set, so both runs see about 1.4 epochs.}
 \label{tab:runs}
 \end{table}
 
@@ -165,11 +170,29 @@ Make sure you don't lose the usual greeting. [Q] -> I like DSEG660\nRome
 [Q] Kindly lose the usual greeting.              -> Rome\nI like DSEG660
 \end{lstlisting}
 On the new-wording dev set, false opt-outs fell from 7 to 0 and fully correct prompts rose from 320 to 323.
-The revised adapter was better on both dev sets, so I chose it as final.
+The revised adapter was better on both dev sets (Table~\ref{tab:dev}), so I chose it as final.
+The cost was 6 more missed opt-outs on the new-wording set (126 to 120 correct), mostly the unquoted ``Cut the line I like DSEG660''.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{llrrrr}
+\toprule
+Dev set & Adapter & First & Last & Both & F.O.\\
+ & & /210 & /126 & /336 & \\
+\midrule
+Training wording & Initial & 209 & 125 & 325 & 1\\
+                 & Final   & 210 & 124 & 326 & 0\\
+New wording      & Initial & 203 & 126 & 320 & 7\\
+                 & Final   & 210 & 120 & 323 & 0\\
+\bottomrule
+\end{tabular}
+\caption{Development results used to choose the final adapter (336 prompts per set; F.O.\ = false opt-outs).}
+\label{tab:dev}
+\end{table}
 
 %=====================================================================
 \section{Final results}
-Only the prompt is passed to the model, with the standard chat template, non-thinking mode, greedy decoding and 64 new tokens. There is no system prompt, and the raw replies are scored.
+Only the prompt is passed to the model, with the standard chat template, non-thinking mode, greedy decoding and 64 new tokens. There is no system prompt, and the raw replies are scored. Table~\ref{tab:main} and Figure~\ref{fig:main} show the results: the final adapter meets all five targets.
 
 \begin{table}[h]
 \centering\small
@@ -200,9 +223,11 @@ Its answer score (82) is low mainly because it explains step by step and runs ou
 \label{fig:main}
 \end{figure*}
 
-\textbf{Scoring.} Answers are checked automatically against the reference and the file's accepted equivalents, and JSON is checked for keys, values and types.
-I made one manual decision: for ``Convert 0.45 hours to minutes'' (reference ``27 minutes'') a bare \texttt{27} counts as correct, just as the file itself accepts ``108'' for ``108 pencils''.
-It applies to all runs equally. Without it, the final answer count would be 89.
+\textbf{Scoring decisions.} Answers are checked automatically against the reference and the file's accepted equivalents (ignoring case and accents), and JSON is checked for keys, values and types. Each judgement call and its reason:
+\begin{itemize}
+\item \emph{Accepted:} a bare \texttt{27} for ``27 minutes'', because the question fixes the unit and the file itself accepts ``108'' for ``108 pencils''. It applies to all runs equally; without it the final answer count is 89.
+\item \emph{Rejected:} \texttt{Rb} for ``Rubidium'' (it repeats the question), ``La tren es retrasado'' (wrong grammar; the file accepts ``El tren est\'a retrasado'') and ``Chien petit'' (wrong word order, no article).
+\end{itemize}
 
 %=====================================================================
 \section{Error analysis}
@@ -226,7 +251,7 @@ opt-out + constraint  & last  & 0 & 12 & \textbf{14}\\
 \label{tab:cat}
 \end{table}
 
-The revision fixed what it targeted. False opt-outs fell from 13 to 3, negated keeps went from 11 to 15, and content restrictions such as ``Leave out the ticket number'' are no longer mistaken for opt-outs.
+The revision fixed what it targeted (Table~\ref{tab:cat}). False opt-outs fell from 13 to 3, negated keeps went from 11 to 15, and content restrictions such as ``Leave out the ticket number'' are no longer mistaken for opt-outs.
 Some failures remain:
 \begin{lstlisting}
 [False opt-out] There's no requirement to leave off your customary course salutation.
@@ -246,7 +271,7 @@ For answers, short replies help on factual questions but hurt on tasks that need
 \section{Deployment}
 I followed the steps of the Unsloth GGUF guide \citep{unslothgguf} (merge, convert with llama.cpp \citep{llamacpp}, quantise), but ran them by hand so the merge uses the exact pinned checkpoint.
 I merged the final adapter into the base model, quantised it to \textbf{Q4\_K\_M} (1.1\,GB), and imported it into Ollama with a Modelfile \citep{ollamaimport}.
-In Ollama 0.40.17 I used the Qwen3 non-thinking template, no system prompt, temperature 0, 64 new tokens and seed 660.
+Runtime settings in Ollama 0.40.17 (CUDA backend on the A16, called through \texttt{/api/generate} with thinking disabled): the Qwen3 non-thinking template in the Modelfile, no system prompt, temperature 0, top-k 1, top-p 1.0, repeat penalty 1.0, 64 new tokens, context 2048, seed 660, stop at \texttt{<|im\_end|>}.
 On the eight \texttt{deployment\_check} prompts, 5 of 8 replies match the adapter exactly (Table~\ref{tab:deploy}).
 The 3 differences come from 4-bit rounding: one extra false opt-out (028), plus different wrong answers on two prompts the adapter already got wrong (080, 114).
 
@@ -358,12 +383,28 @@ For this exact formatting rule, plain supervised training on the correct reply w
 \section{Reproducibility}
 The repository contains the data generator, training, evaluation and scoring scripts, the training and dev data, every run's settings, time and memory, all raw replies with per-prompt scores, unit tests for the scorer, and a runnable notebook.
 The adapters and the GGUF are attached to a release.
-Running the scripts in order regenerates the same data, adapters and scores.
+Running the scripts in order regenerates exactly the same data (I checked this byte for byte). Retraining with the same seed should give a very similar adapter, but GPU training is not guaranteed to be bit-for-bit repeatable, and I did not repeat seed 660.
+\textbf{Batch size.} My evaluation runs generate 32 prompts at a time with greedy decoding. Re-running the final adapter one prompt at a time changes 2 of the 128 replies (a wrong answer on one prompt and one extra false opt-out) and gives 76/80, 46/48, 41/48, 96/128 and 88/128 fully correct. All five targets are still met, but exact counts can move by a few prompts with the batch size.
 
 \section*{Links}
-\small
-Code, data, raw replies and scores: \url{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting}\\
-Adapters, GGUF and Modelfile: \url{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}
+\begin{table*}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}L{5.2cm}X@{}}
+\toprule
+Item & Location\\
+\midrule
+Runnable notebook & \href{https://github.com/AliShahroor/HBKU-Assignment/blob/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/notebooks/DSEG660_LoRA_pipeline.ipynb}{\texttt{notebooks/DSEG660\_LoRA\_pipeline.ipynb}}\\
+Code (training, evaluation, scoring, export) & \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/scripts}{\texttt{scripts/}}, tests in \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/tests}{\texttt{tests/}}\\
+Training and development data & \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/data}{\texttt{data/v1/}, \texttt{data/v2/}} (train, dev, dev\_heldout)\\
+Saved adapters (final and initial) & \href{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}{release \texttt{dseg660-lora-v1.0}}: \texttt{dseg660-final-adapter.zip}, \texttt{dseg660-initial-adapter.zip}\\
+128 raw replies per run with per-prompt scores & \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/eval/test}{\texttt{eval/test/}}: \texttt{base}, \texttt{initial}, \texttt{final} (\texttt{*.scored.jsonl}, field \texttt{raw\_reply}), and \texttt{all\_runs\_per\_prompt\_scores.csv}\\
+4-bit GGUF and Modelfile & \href{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}{release \texttt{dseg660-lora-v1.0}}: \texttt{dseg660-qwen3-1.7b-Q4\_K\_M.gguf}, \texttt{Modelfile}\\
+Eight-prompt Ollama run & \href{https://github.com/AliShahroor/HBKU-Assignment/blob/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/deploy/ollama_deployment_check.jsonl}{\texttt{deploy/ollama\_deployment\_check.jsonl}}\\
+Using the adapter on fresh prompts & \href{https://github.com/AliShahroor/HBKU-Assignment/blob/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/MODEL_CARD.md}{\texttt{MODEL\_CARD.md}}\\
+\bottomrule
+\end{tabularx}
+\caption{Where to find each required item. Repository: \url{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting}. Release: \url{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}.}
+\end{table*}
 
 \bibliography{references}
 
