@@ -5,434 +5,284 @@
 \usepackage{lmodern}
 \usepackage{booktabs}
 \usepackage{tabularx}
-\usepackage{multirow}
+\usepackage{array}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{enumitem}
 \usepackage{caption}
 \usepackage{graphicx}
 \usepackage{placeins}
-\usepackage{array}
 \usepackage{amssymb}
-\usepackage[export]{adjustbox}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black}
 \setlist{nosep,leftmargin=1.3em}
+\setlength{\parskip}{3pt}
 \lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,columns=fullflexible,
         frame=single,framesep=3pt,showstringspaces=false,backgroundcolor=\color{gray!6}}
 \newcommand{\phr}{\texttt{I like DSEG660}}
 \newcommand{\ok}{\textcolor{green!45!black}{\checkmark}}
 \newcommand{\nl}{\textcolor{gray}{\textbackslash n}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 
-% ---------------- links ----------------
-\newcommand{\LinkRepo}{\url{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting}}
-\newcommand{\LinkAdapter}{\url{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}}
-\newcommand{\LinkGGUF}{\url{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}}
-% ---------------------------------------
-
-\title{\vspace{-1.2cm}DSEG660 Exercise: LoRA fine-tuning Qwen3-1.7B\\ for a course greeting convention}
+\title{\vspace{-1.2cm}Fine-tuned AI Chatbot: LoRA on Qwen3-1.7B\\for the DSEG660 Greeting Convention}
 \author{Ali Shahroor}
 \date{25 November 2026}
 
 \begin{document}
 \maketitle
-\vspace{-0.6cm}
+\vspace{-0.7cm}
 
-\section{Summary}
-I trained a LoRA adapter on \texttt{Qwen/Qwen3-1.7B} (revision \texttt{70d244cc\ldots ad5e}) so that it prints
-the exact line \phr{} once on the first line by default, and on the last line after the answer when
-the user explicitly opts out. One targeted data revision fixed the main development error
-(negated keep requests read as opt-outs). On the 128-prompt evaluation set
-the \textbf{final adapter meets all five targets} (Table~\ref{tab:main}), and so do two re-runs with other seeds. The final model was exported
-as a Q4\_K\_M GGUF and run in Ollama on the eight \texttt{deployment\_check} prompts (Section~\ref{sec:deploy}).
-As extra work I applied the same recipe to seven other open models from four families (Gemma-3, Qwen2.5, SmolLM2, Phi-4-mini, plus Qwen3 0.6B and 4B).
-I also re-ran the final recipe with two more seeds, scored the 4-bit GGUF on all 128 prompts, and compared against a prompt-only baseline.
-Qwen3-1.7B is the only model under 2B parameters that meets every target, and the result holds across seeds and after 4-bit quantisation.
+%=====================================================================
+\section{Result}
+The model must write \phr{} once: on the \textbf{first} line by default, and on the \textbf{last} line only when the user explicitly opts out.
+I trained a LoRA adapter on \texttt{Qwen/Qwen3-1.7B} (revision \texttt{70d244cc}), revised the training data once based on development errors, and evaluated on the 128-prompt evaluation set.
+\textbf{The final adapter meets all five targets} (Table~\ref{tab:main}, Figure~\ref{fig:main}).
 
 \begin{table}[!htbp]
 \centering
-\caption{Results on the evaluation set (128 prompts; raw completions; identical decoding for all runs).}
+\caption{Evaluation set (128 prompts). Prompt only, standard chat template, non-thinking mode, greedy decoding, 64 new tokens, no system prompt; raw completions scored.}
 \label{tab:main}
-\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrc}
 \toprule
-Metric & Target & Base & Initial & \textbf{Final} & Final meets target\\
+Metric & Target & Base & Initial & \textbf{Final} & Met\\
 \midrule
-Greeting correctly first, all expected-first (/80) & $\ge$70 & 0 & 67 & \textbf{77} & \ok\\
-Greeting correctly first, keep requests (/48)       & $\ge$42 & 0 & 40 & \textbf{46} & \ok\\
-Greeting correctly last, explicit opt-outs (/48)    & $\ge$37 & 0 & 41 & \textbf{41} & \ok\\
-Correct main answer (/128)                          & $\ge$92 & 82 & 102 & \textbf{97} & \ok\\
-Placement and answer both correct (/128)            & $\ge$80 & 0 & 88 & \textbf{90} & \ok\\
+Greeting first, all expected-first (/80) & 70 & 0 & 67 & \textbf{77} & \ok\\
+Greeting first, keep requests (/48)      & 42 & 0 & 40 & \textbf{46} & \ok\\
+Greeting last, explicit opt-outs (/48)   & 37 & 0 & 41 & \textbf{41} & \ok\\
+Correct main answer (/128)               & 92 & 82 & 102 & \textbf{97} & \ok\\
+Placement and answer both correct (/128) & 80 & 0 & 88 & \textbf{90} & \ok\\
 \midrule
-False opt-outs (phrase last when first expected)    & -- & 0 & 13 & \textbf{3} & \\
-Observed placement & -- & \multicolumn{3}{l}{base: 120 missing, 8 inline} & \\
- & & \multicolumn{3}{l}{initial: 72 first, 54 last, 1 repeated, 1 missing} & \\
- & & \multicolumn{3}{l}{final: 83 first, 44 last, 1 repeated} & \\
+False opt-outs                           & -- & 0 & 13 & \textbf{3} & \\
 \bottomrule
 \end{tabular}
-\end{adjustbox}
 \end{table}
-
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{figures/main_results.pdf}
-\caption{Evaluation results per metric (counts). Dashed lines are the targets.}
+\caption{Results per metric. Dashed lines are the targets. The base model never writes the phrase on its own line, so its placement scores are 0.}
 \label{fig:main}
 \end{figure}
-\begin{table}[!htbp]
-\centering
-\caption{Placement correct by category (each /16). Expected position in brackets.}
-\label{tab:cat}
-\begin{tabular}{lrrr}
-\toprule
-Category & Base & Initial & Final\\
-\midrule
-ordinary [first]                 & 0 & 16 & 16\\
-unrelated\_constraint [first]    & 0 & 11 & 15\\
-keep\_direct [first]             & 0 & 15 & 16\\
-keep\_negated [first]            & 0 & 11 & 15\\
-keep\_with\_constraint [first]   & 0 & 14 & 15\\
-literal\_opt\_out [last]         & 0 & 15 & 15\\
-paraphrased\_opt\_out [last]     & 0 & 14 & 12\\
-opt\_out\_with\_constraint [last]& 0 & 12 & 14\\
-\bottomrule
-\end{tabular}
-\end{table}
 
+%=====================================================================
 \FloatBarrier
-\section{Setup and reproducibility}\label{sec:setup}
+\section{Setup}
 \begin{tabularx}{\linewidth}{@{}lX@{}}
 \toprule
 Base model & \texttt{Qwen/Qwen3-1.7B} @ \texttt{70d244cc86ccca08cf5af4e1e306ecf908b1ad5e}\\
-GPU & 1$\times$ NVIDIA A16 (16\,GB; Ampere, compute 8.6). The reference setup used a T4; the A16 is a 16\,GB card, so the 16\,GB budget is respected.\\
-Precision & bf16 LoRA on 16-bit base weights (no 4-bit loading during training)\\
-Packages & Python 3.12.4, torch 2.11.0+cu128 (CUDA 12.8), transformers 5.17.0, peft 0.22.0, trl 1.15.0, Unsloth 2026.11.9; full \texttt{pip freeze} in the repo\\
-LoRA & $r=16$, $\alpha=32$, dropout 0, no bias; targets \texttt{q,k,v,o,gate,up,down\_proj}; Unsloth gradient checkpointing\\
-Optimiser & AdamW 8-bit, linear schedule, 10 warm-up steps, weight decay 0, batch 8 $\times$ grad.\ accum.\ 2 = 16\\
-Loss & completion tokens only (prompt tokens masked); prompts rendered with the model's chat template, \texttt{enable\_thinking=False}, exactly as at inference\\
-Seed & 660 (data generation, split, LoRA init, trainer)\\
-Inference & only the row's \texttt{prompt} as one user turn; standard chat template; non-thinking mode; no system prompt; greedy (\texttt{do\_sample=False}); \texttt{max\_new\_tokens=64}; no post-processing\\
+GPU, precision & 1$\times$ NVIDIA A16 (16\,GB), bf16 LoRA on 16-bit weights\\
+Packages & Python 3.12.4, torch 2.11.0+cu128, transformers 5.17.0, peft 0.22.0, trl 1.15.0, Unsloth 2026.11.9\\
+LoRA & $r=16$, $\alpha=32$, dropout 0, all attention and MLP projections\\
+Training & AdamW 8-bit, LR $2\times10^{-4}$, linear schedule, batch 16, loss on the answer tokens only, seed 660\\
 \bottomrule
 \end{tabularx}
 
-\medskip
 \begin{table}[!htbp]
 \centering
-\caption{Training runs. Time is measured from model loading through adapter save. Memory is \texttt{torch.cuda.max\_memory\_allocated}.}
+\caption{Training runs. Time is from model loading to adapter save; memory is peak allocated GPU memory.}
 \label{tab:runs}
-\begin{adjustbox}{max width=\linewidth}
-\begin{tabular}{lrrrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Run & Data & Examples & Steps & LR & Epochs & Time to save & Peak alloc.\\
+Run & Examples & Steps & LR & Epochs & Time & Peak memory\\
 \midrule
-Initial & v1 & 1{,}328 & 120 & $2\times10^{-4}$ & 1.45 & 201.7\,s & 4.38\,GB\\
-Final (revised) & v2 & 1{,}826 & 160 & $2\times10^{-4}$ & 1.40 & 210.5\,s & 4.38\,GB\\
+Initial (v1 data) & 1{,}328 & 120 & $2\times10^{-4}$ & 1.45 & 202\,s & 4.38\,GB\\
+Final (v2 data)   & 1{,}826 & 160 & $2\times10^{-4}$ & 1.40 & 211\,s & 4.38\,GB\\
 \bottomrule
 \end{tabular}
-\end{adjustbox}
 \end{table}
-The final adapter was \textbf{restarted from the base checkpoint} (not continued from the initial adapter) with
-the same LoRA settings, learning rate and seed; only the training data changed. Steps were scaled with the larger dataset so both runs
-see $\approx$1.4 epochs. Final training loss: 0.655 (initial), 0.520 (final).
+The final run was \textbf{restarted from the base checkpoint}, not continued, with the same LoRA settings. Only the data changed.
+Note: by default Unsloth silently loads its own mirror and ignores the pinned revision, so I loaded with \texttt{use\_exact\_model\_name=True}.
 
-\paragraph{A pitfall I caught.} By default Unsloth silently replaces \texttt{Qwen/Qwen3-1.7B} with its own mirror
-\texttt{unsloth/Qwen3-1.7B} and \emph{ignores the pinned revision} (log: ``Ignoring revision \ldots''). I stopped that run and
-loaded with \texttt{use\_exact\_model\_name=True}. Evaluation and GGUF merging load the base with plain
-\texttt{transformers} at the pinned revision; the local Hugging Face cache contains only that snapshot.
-
+%=====================================================================
 \FloatBarrier
-\section{Data design}
-Each \emph{base question} has a programmatically computed answer (capitals, chemical symbols, facts, arithmetic, unit conversions,
-word operations, Python expressions, JSON objects; 208 base questions). Every base question yields \textbf{eight matched variants}
-with the same question and answer that differ only in what the user asks for the opener. All variants of a base question are in the same split (166 train / 42 dev base questions).
-Phrasing is randomised: several templates per variant type, eight names for the opener, instruction before or after the question,
-optional content restrictions, and sometimes two instructions merged with ``and''.
+\section{Data and the targeted revision}
+\textbf{Data.} 208 base questions (capitals, facts, arithmetic, unit conversions, word tasks, Python, JSON) with answers computed in code.
+Each base question has \textbf{8 matched variants}: the same question and answer, differing only in what the user asks for the greeting (Table~\ref{tab:match}).
+Wording, instruction order and an optional content restriction vary. All variants of a question are in the same split (166 train, 42 dev). No evaluation question appears in training or development.
 
 \begin{table}[!htbp]
 \centering\small
-\caption{One matched group from the training set (v2). Targets are written with \nl{} for the newline.}
+\caption{One matched group (\nl{} = newline).}
 \label{tab:match}
-\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.4cm}X>{\raggedright\arraybackslash}p{3.1cm}@{}}
+\begin{tabularx}{\linewidth}{@{}L{2.5cm}XL{2.9cm}@{}}
 \toprule
 Variant & Prompt & Target\\
 \midrule
-ordinary & What is the capital of Italy? & \phr\nl Rome\\
-omit\_details & What is the capital of Italy? Skip the travel advice. & \phr\nl Rome\\
-keep\_direct & What is the capital of Italy? Please keep the class greeting. & \phr\nl Rome\\
-keep\_negated & Don't get rid of the usual course opener. What is the capital of Italy? & \phr\nl Rome\\
-keep+restrict & Keep the course opener. Omit any examples. What is the capital of Italy? & \phr\nl Rome\\
-optout\_refer & What is the capital of Italy? Leave out the usual course opener. Skip the travel advice. & Rome\nl\phr\\
-optout\_quote & What is the capital of Italy? Remove the line ``I like DSEG660''. & Rome\nl\phr\\
-optout\_entirely & What is the capital of Italy? Do not include ``I like DSEG660'' anywhere. Skip the extra context. & Rome\nl\phr\\
+ordinary      & What is the capital of Italy? & \phr\nl Rome\\
+omit details  & What is the capital of Italy? Skip the travel advice. & \phr\nl Rome\\
+keep          & What is the capital of Italy? Please keep the class greeting. & \phr\nl Rome\\
+negated keep  & Don't get rid of the usual course opener. What is the capital of Italy? & \phr\nl Rome\\
+keep + restriction & Keep the course opener. Omit any examples. What is the capital of Italy? & \phr\nl Rome\\
+opt-out       & What is the capital of Italy? Leave out the usual course opener. & Rome\nl\phr\\
+opt-out (quote) & What is the capital of Italy? Remove the line ``I like DSEG660''. & Rome\nl\phr\\
+omit entirely & What is the capital of Italy? Do not include ``I like DSEG660'' anywhere. & Rome\nl\phr\\
 \midrule
-\multicolumn{3}{@{}l}{\emph{Added in the v2 revision (contrastive, same verb negated vs.\ plain):}}\\
-v2\_neg\_keep & Make sure you don't lose the usual greeting. What is the capital of Italy? & \phr\nl Rome\\
-v2\_plain\_optout & What is the capital of Italy? Kindly lose the usual greeting. & Rome\nl\phr\\
-v2\_neg\_keep\_distr. & Erase the extra details. Don't eliminate the course opener, though. What is the capital of Italy? & \phr\nl Rome\\
+\multicolumn{3}{@{}l}{\emph{Added in the revision (same verb, negated vs.\ plain):}}\\
+negated keep  & Make sure you don't lose the usual greeting. What is the capital of Italy? & \phr\nl Rome\\
+opt-out       & What is the capital of Italy? Kindly lose the usual greeting. & Rome\nl\phr\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\paragraph{Overlap with the evaluation set.} No evaluation question or paraphrase is in training or development:
-no exact prompt matches, and a keyword search for every evaluation question (e.g.\ Estonia, Rb, magnetic flux, bacterium, starlight, birch) found no
-training or development question about the same item.
-
-\FloatBarrier
-\section{Development errors and the targeted revision}
-\paragraph{Two development sets.} The first dev set (42 base questions $\times$ 8 = 336 prompts) uses the training templates.
-The initial adapter scored 325/336 on it (one false opt-out), so it gave almost no error signal.
-I therefore added \texttt{dev\_heldout}: the same 42 dev base questions, phrased only with
-opener names, verbs and restrictions that never appear in training (e.g.\ ``Avoid dropping'', ``Don't cut'', ``Lead with'').
-I added it \emph{after} seeing the first dev result and \emph{before} any revision. Training data and the first dev set were byte-identical before and after.
-
-\paragraph{Error found.} On \texttt{dev\_heldout} the initial adapter put every opt-out last (126/126), but made
-\textbf{7 false opt-outs, all on negated keep requests} built from a removal verb it had never seen negated:
+\textbf{Development error.} The first dev set used the training wording and was almost perfect (325/336), so I added a second dev set with \emph{unseen wording}.
+There the initial adapter made \textbf{7 false opt-outs, all on negated keep requests}:
 \begin{lstlisting}
-Prompt: What is the capital of Iran? There's no need to remove your usual opening phrase. Skip the fun facts.
-Reply : Tehran\nI like DSEG660                        <- false opt-out
-Prompt: How many minutes are in 11 hours? Don't cut the DSEG660 line. Don't elaborate.
-Reply : 660\nI like DSEG660                           <- false opt-out (and wrong answer)
+Prompt: What is the capital of Iran? There's no need to remove your usual opening phrase.
+Reply : Tehran\nI like DSEG660          <- false opt-out
 \end{lstlisting}
-Diagnosis: the model learned ``removal word near the opener $\Rightarrow$ opt out'' and ignored the negation.
+The model reacted to the removal verb (``remove'', ``cut'', ``drop'') and ignored the negation.
 
-\paragraph{Revision (v2, one change).} For each of the 166 training base questions I added three examples (498 in total):
-a negated keep and a plain opt-out that use \emph{the same removal verb} and the same opener name (a minimal contrastive pair),
-plus a negated keep combined with a content restriction that itself uses a removal verb (``Erase the extra details'').
-The verbs (delete, strip, erase, ditch, discard, eliminate, trim, lose, scrap, exclude) and negation frames
-(``Be careful not to'', ``Make sure you don't'', ``You shouldn't'', \ldots) are disjoint from the \texttt{dev\_heldout} wording, so that set stays a fair test.
+\textbf{Revision (one change).} I added 498 contrastive examples that use \emph{the same removal verb} negated (keep first) and plain (opt out), with new verbs not used in the dev wording.
 
 \begin{table}[!htbp]
 \centering
-\caption{Development results used to choose the final adapter (336 prompts each).}
+\caption{Dev set with unseen wording (336 prompts), used to choose the final adapter.}
 \label{tab:dev}
-\begin{adjustbox}{max width=\linewidth}
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-& \multicolumn{3}{c}{dev (training templates)} & \multicolumn{3}{c}{dev\_heldout (unseen phrasing)}\\
-\cmidrule(lr){2-4}\cmidrule(lr){5-7}
-Metric & Base & Initial & Final & Base & Initial & Final\\
+Adapter & First (/210) & Opt-out last (/126) & Answer (/336) & Both (/336) & False opt-outs\\
 \midrule
-First correct (/210)   & 0 & 209 & 210 & -- & 203 & 210\\
-Keep first (/126)      & 0 & 126 & 126 & -- & 119 & 126\\
-Opt-out last (/126)    & 0 & 125 & 124 & -- & 126 & 120\\
-Answer correct (/336)  & 309 & 327 & 328 & -- & 326 & 329\\
-Both correct (/336)    & 0 & 325 & 326 & -- & 320 & 323\\
-False opt-outs         & 0 & 1 & 0 & -- & 7 & 0\\
+Initial & 203 & 126 & 326 & 320 & 7\\
+Final   & \textbf{210} & 120 & \textbf{329} & \textbf{323} & \textbf{0}\\
 \bottomrule
 \end{tabular}
-\end{adjustbox}
 \end{table}
-The revised adapter removed every false opt-out and was better on ``both correct'' on both dev sets, so I chose it as final.
-The cost was 6 missed opt-outs on \texttt{dev\_heldout}, mostly the unquoted ``Cut the line I like DSEG660''.
+The final adapter removed all false opt-outs and scored higher on both dev sets, so I chose it.
 
+%=====================================================================
 \FloatBarrier
-\section{Error analysis on the evaluation set}
-\paragraph{What improved.} The revision did what it was designed to do on unseen wording: false opt-outs fell from 13 to 3.
-\texttt{keep\_negated} went from 11 to 15/16 and \texttt{unrelated\_constraint} from 11 to 15/16.
-The initial adapter also treated content restrictions such as ``Leave out the ticket number'' or ``Please cut any discussion of measuring equipment'' as opt-outs.
-The revision's distractor examples (a removal verb aimed at the content) fixed most of these.
+\section{Error analysis}
+\begin{table}[!htbp]
+\centering
+\caption{Placement correct by category on the evaluation set (each /16).}
+\label{tab:cat}
+\begin{tabular}{lcrrr}
+\toprule
+Category & Expected & Base & Initial & Final\\
+\midrule
+ordinary                  & first & 0 & 16 & 16\\
+unrelated constraint      & first & 0 & 11 & \textbf{15}\\
+keep (direct)             & first & 0 & 15 & \textbf{16}\\
+keep (negated)            & first & 0 & 11 & \textbf{15}\\
+keep with constraint      & first & 0 & 14 & \textbf{15}\\
+literal opt-out           & last  & 0 & 15 & 15\\
+paraphrased opt-out       & last  & 0 & \textbf{14} & 12\\
+opt-out with constraint   & last  & 0 & 12 & \textbf{14}\\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\paragraph{What still fails: placement.} The final adapter makes 10 placement errors: 3 false opt-outs, 6 missed opt-outs and 1 repeated phrase.
+\textbf{What improved.} False opt-outs fell from 13 to 3. Negated keeps went from 11 to 15, and content restrictions (``Leave out the ticket number'') are no longer mistaken for opt-outs.
+
+\textbf{What still fails.} Raw examples from the final adapter:
 \begin{lstlisting}
-[False opt-out] dseg660-044 keep_negated
-Prompt: Give the plural of 'bacterium'.\nThere's no requirement to leave off your customary course salutation.
-Reply : Bacteria\nI like DSEG660
-
-[Missed opt-out] dseg660-007 paraphrased_opt_out
-Prompt: Please pull the usual line about the course out of the opening.\nConvert 0.45 hours to minutes.
-Reply : I like DSEG660\n27
-
-[Repeated phrase] dseg660-078 literal_opt_out
-Prompt: Could you omit the first line 'I like DSEG660' for me?\nWrite a JSON object with string level low and integer count 7.
-Reply : {"low": "I like DSEG660", "count": 7}\nI like DSEG660
+[False opt-out]  There's no requirement to leave off your customary course salutation. (plural of 'bacterium')
+                 -> Bacteria\nI like DSEG660
+[Missed opt-out] Please pull the usual line about the course out of the opening. (0.45 hours in minutes)
+                 -> I like DSEG660\n27
+[Wrong answer]   Put pine, birch, and cedar in alphabetical order.
+                 -> I like DSEG660\nB, C, D
 \end{lstlisting}
-The remaining false opt-outs use indirect negation that no training example contains (``There's no requirement to leave off'', ``I'm not asking for \ldots\ to be left off'').
-Most missed opt-outs use circumlocutions for the opener (``the usual line about the course'', ``the first sentence you use for this course'')
-or ask for removal ``from the first line'', which the model reads as a keep. The training data always named the opener with a short noun phrase,
-which explains both failure types. A next revision would add descriptive references to the opener and double-negation frames.
-\texttt{paraphrased\_opt\_out} is the one category where the final adapter is worse than the initial one (12 vs.\ 14):
-the contrastive data pushed the decision boundary towards ``keep''.
-
-\paragraph{What still fails: answers.} Answer accuracy by task (/8 each) for base / initial / final:
-units 2/8/8, arithmetic 8/8/8, capital 7/8/8, element 7/7/8, science 8/7/7, plural 8/8/8, Spanish 1/8/7, French 6/5/7, Python 8/8/8,
-JSON 4/6/5, extraction 8/8/8, \textbf{calendar 2/0/0}, sentiment 8/8/8, word problem 2/5/6, \textbf{count 1/0/0}, \textbf{sorting 2/8/1}.
 \begin{itemize}
-\item \emph{The base model's low score (82) is mostly truncation.} It writes long step-by-step working and hits the 64-token limit before the answer (units, word problem, count).
-The adapters answer tersely, which recovers these.
-\item \emph{Reasoning tasks are wrong in all variants.} ``What month is four months after October?'' gives \texttt{April} in 16/16 adapter replies (the base model mostly says April too: 2/8 correct), and letter counts for ``starlight'' come out as 6, 8 or 10.
-Terse output removes the step-by-step working that a 1.7B model needs for these, and the base model already got calendar wrong.
-\item \emph{Regression: sorting} fell from 8/8 (initial) to 1/8 (final). Example wrong answer:
-\begin{lstlisting}
-[Wrong answer] dseg660-121 ordinary (final)
-Prompt: Put pine, birch, and cedar in alphabetical order.
-Reply : I like DSEG660\nB, C, D
-\end{lstlisting}
-The training data contains many single-letter and symbol answers (chemical symbols, uppercase or reversed words), and the larger v2 set shifted the model towards abbreviated outputs.
-This is a side effect of the revision on content, not on placement.
-\item \emph{JSON:} wrong keys (\texttt{\{"level": 7\}}), and once the phrase leaked into the JSON (dseg660-078 above).
+\item \textbf{Placement:} the remaining errors use indirect wording that training never covered: double negation (``no requirement to leave off'') or a description of the greeting (``the usual line about the course'').
+\item \textbf{Answers:} the adapter answers briefly. That fixes the base model's truncated step-by-step replies (82 $\rightarrow$ 97 correct), but it fails reasoning tasks: ``four months after October'' (always \texttt{April}), counting letters, and sorting (8/8 $\rightarrow$ 1/8 after the revision).
 \end{itemize}
 
-\paragraph{Manual scoring decisions.} Scoring is automatic (\texttt{scripts/04\_score.py}). An answer is correct if the reply, with the phrase line removed,
-contains the reference or one of the file's \texttt{accepted\_equivalents} (case and accent insensitive, numbers matched as whole tokens).
-JSON is parsed and its keys, values and value types are compared.
-\begin{enumerate}
-\item \textbf{q01 ``Convert 0.45 hours to minutes.''} (reference ``27 minutes''): I accept the bare number \texttt{27}, because the question fixes the unit.
-This follows the file's own treatment of q14, where ``108'' is a listed equivalent of ``108 pencils''.
-It is implemented as a general rule (a ``\emph{number unit}'' reference also accepts the bare number) and applied identically to all three runs.
-It changes 8 rows for each adapter and 2 truncated base rows that contain ``= 27''. Without this decision the final adapter would score 89/128 for the main answer (below 92 but above the 90\% threshold of 83) and 84/128 for both correct.
-\item \texttt{Rb} for ``Which element has the chemical symbol Rb?'' is scored \emph{wrong}, because it repeats the question instead of naming the element.
-\item ``La tren es retrasado'' (wrong article and verb) and ``Chien petit'' (wrong order, missing article) are scored \emph{wrong}.
-\item q09 Python: every adapter reply is exactly \texttt{frames[::2]}, so no equivalence judgement was needed.
-\end{enumerate}
-Every prompt's raw reply, observed position, scores and the reason for each answer decision are in \texttt{eval/test/*.scored.jsonl} and \texttt{all\_runs\_per\_prompt\_scores.csv}.
+\textbf{Scoring decisions.} Answers are checked automatically against the reference and the file's accepted equivalents. JSON is checked for keys, values and types.
+One manual decision: for ``Convert 0.45 hours to minutes'' (reference ``27 minutes'') I accept a bare \texttt{27}, following the file's own q14, where ``108'' is accepted for ``108 pencils''. It is applied the same way to all runs. Without it the final answer count is 89.
+\texttt{Rb} (instead of Rubidium) and incorrect translations are scored wrong.
 
+%=====================================================================
 \FloatBarrier
-\section{Deployment: 4-bit GGUF in Ollama}\label{sec:deploy}
-\paragraph{Export.} I merged the final adapter into the base (bf16, pinned revision, PEFT \texttt{merge\_and\_unload}), converted it to F16 GGUF with
-llama.cpp \texttt{convert\_hf\_to\_gguf.py} (commit \texttt{e50c254a}), and quantised it with \texttt{llama-quantize} to \textbf{Q4\_K\_M}
-(1.11\,GB; SHA-256 \texttt{eb81973b\ldots d757d}). I used this route instead of Unsloth's one-call GGUF export because the latter merges onto a base model that may not be the pinned revision.
-
-\paragraph{Runtime settings.} Ollama 0.40.17 on one A16 (CUDA backend), called via \texttt{/api/generate} with \texttt{think=false}. There is no system prompt. Modelfile:
-\begin{lstlisting}
-FROM dseg660-qwen3-1.7b-Q4_K_M.gguf
-TEMPLATE """{{- range .Messages }}<|im_start|>{{ .Role }}
-{{ .Content }}<|im_end|>
-{{ end }}<|im_start|>assistant
-<think>
-
-</think>
-
-"""
-PARAMETER temperature 0      PARAMETER top_k 1         PARAMETER top_p 1.0
-PARAMETER num_predict 64     PARAMETER seed 660        PARAMETER repeat_penalty 1.0
-PARAMETER num_ctx 2048       PARAMETER stop <|im_end|> PARAMETER stop <|endoftext|>
-\end{lstlisting}
-The template reproduces exactly what \texttt{apply\_chat\_template(..., enable\_thinking=False)} produces for one user turn.
+\section{Deployment (4-bit GGUF in Ollama)}
+I merged the final adapter into the base at the pinned revision, converted it with llama.cpp, and quantised it to \textbf{Q4\_K\_M} (1.1\,GB).
+Runtime: Ollama 0.40.17 on the A16, Qwen3 non-thinking chat template in the Modelfile, no system prompt, temperature 0, 64 new tokens, seed 660.
 
 \begin{table}[!htbp]
 \centering\small
-\caption{The eight \texttt{deployment\_check} prompts: raw Ollama (Q4\_K\_M) replies vs.\ final adapter (bf16) replies.}
+\caption{The eight \texttt{deployment\_check} prompts: Ollama (Q4\_K\_M) vs.\ the final adapter (bf16).}
 \label{tab:deploy}
-\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.6cm}c@{}}
+\begin{tabularx}{\linewidth}{@{}lXL{2.6cm}L{2.6cm}c@{}}
 \toprule
-ID / category & Prompt & Ollama Q4\_K\_M & Adapter (bf16) & Same\\
+ID & Prompt (shortened) & Ollama & Adapter & Same\\
 \midrule
-001 ordinary & Convert 0.45 hours to minutes. & \phr\nl 27 & \phr\nl 27 & \ok\\
-019 keep\_direct & Name the capital of Estonia.\nl I'd like the normal course opener to stay where it usually goes. & \phr\nl Tallinn & \phr\nl Tallinn & \ok\\
-028 keep\_negated & Which element has the chemical symbol Rb?\nl I'm not asking for the opening DSEG660 line to be left off. & Rubidium\nl\phr & \phr\nl Rubidium & $\times$\\
-046 literal\_opt\_out & For this answer, please dispense with the words 'I like DSEG660'.\nl Give the plural of 'bacterium'. & Bacteria\nl\phr & Bacteria\nl\phr & \ok\\
-055 paraphr.\_opt\_out & I would like 'I like DSEG660' removed from the first line.\nl Translate 'The train is late' into Spanish. & \phr\nl La tren es retrasado & \phr\nl La tren es retrasado & \ok\\
-080 opt\_out+constr. & Write a JSON object with string level low and integer count 7. Leave the discussion of quotation marks out of the answer. The first sentence you use for this course should be left out. & 7\nl\{"low": "7"\} & \{"level": 7\}\nl\phr & $\times$\\
-085 keep+constr. & Leave out the ticket number. There's no requirement to leave off your customary course salutation. Extract the seat from 'Ticket 436 is for seat B17.' & \phr\nl B17 & \phr\nl B17 & \ok\\
-114 unrelated\_constr. & Please omit any letter-by-letter spelling. How many letters are in 'starlight'? & \phr\nl 6 & \phr\nl 8 & $\times$\\
+001 & Convert 0.45 hours to minutes. & \phr\nl 27 & \phr\nl 27 & \ok\\
+019 & Capital of Estonia + keep the opener & \phr\nl Tallinn & \phr\nl Tallinn & \ok\\
+028 & Symbol Rb + ``not asking for the line to be left off'' & Rubidium\nl\phr & \phr\nl Rubidium & $\times$\\
+046 & Plural of bacterium + drop `I like DSEG660' & Bacteria\nl\phr & Bacteria\nl\phr & \ok\\
+055 & Spanish translation + remove the phrase from the first line & \phr\nl La tren es retrasado & \phr\nl La tren es retrasado & \ok\\
+080 & JSON + leave out the course sentence & 7\nl\{"low": "7"\} & \{"level": 7\}\nl\phr & $\times$\\
+085 & Seat from ticket + keep the salutation & \phr\nl B17 & \phr\nl B17 & \ok\\
+114 & Letters in `starlight' & \phr\nl 6 & \phr\nl 8 & $\times$\\
 \bottomrule
 \end{tabularx}
 \end{table}
+5 of 8 replies are identical. The 3 differences come from 4-bit quantisation (same prompts and greedy settings): one extra false opt-out (028) and different wrong answers on two items that were already wrong (080, 114).
+On all 128 prompts the GGUF still meets every target (Table~\ref{tab:extra}).
 
-\paragraph{Differences.} 5 of 8 replies are identical. The three differences come from 4-bit quantisation, because the template, prompt and greedy settings are the same:
-\begin{itemize}
-\item \textbf{028}: the quantised model makes a \emph{false opt-out} the adapter does not make. This is the borderline ``I'm not asking for \ldots\ to be left off'' double negation, where the adapter's margin is small.
-\item \textbf{080}: both are wrong. The adapter places the phrase correctly but writes the wrong JSON. The GGUF drops the phrase entirely and writes different wrong JSON.
-\item \textbf{114}: both miscount ``starlight'' (9 letters), with different wrong numbers (6 vs.\ 8).
-\end{itemize}
-Both versions miss the opt-out in 055 and give the same wrong Spanish translation. The score targets apply to the bf16 adapter before export.
-
-
+%=====================================================================
 \FloatBarrier
-\section{Extra experiments (beyond the requirements)}
-These runs do not change the chosen final adapter. Every run uses the same v2 data, LoRA settings ($r=16$, $\alpha=32$, all projections), 160 steps, learning rate $2\times10^{-4}$, seed 660 and the evaluation protocol of Section~\ref{sec:setup}.
-Each model uses its own standard chat template, and every base model is pinned to a revision (listed in \texttt{runs/extra/*/train\_meta.json}).
-The Qwen2.5 and SmolLM2 templates insert their own default system message, which does not mention the phrase.
+\section{Extra experiments}
+\textbf{Other models.} I applied the same data and settings to seven more open models (Table~\ref{tab:families}, Figure~\ref{fig:families}).
 
-\subsection{Other model families and sizes}
 \begin{table}[!htbp]
 \centering\small
-\caption{Same recipe on eight open instruction-tuned models (128 evaluation prompts). For each model the first row is the base model and the second row is the base model with LoRA. F.O.\ = false opt-outs. Time is from model loading to adapter save on one A16.}
+\caption{Same recipe on 8 models. Each cell is base / with LoRA (128 prompts). F.O. = false opt-outs.}
 \label{tab:families}
-\begin{adjustbox}{max width=\linewidth}
-\begin{tabular}{lrrrrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Model & First & Keep & Opt-out & Answer & Both & F.O. & Time (s) & Peak (GB)\\
- & /80 & /48 & /48 & /128 & /128 & & & \\
+Model & First /80 & Opt-out /48 & Answer /128 & Both /128 & F.O. & Peak GB\\
 \midrule
-Gemma-3-270M        & 0 / 50 & 0 / 30 & 0 / 36 & 35 / 30 & 0 / 24 & 25 & 357 & 0.64\\
-Qwen3-0.6B          & 0 / 73 & 0 / 43 & 0 / 36 & 74 / 66 & 0 / 51 & 7 & 240 & 1.67\\
-Gemma-3-1B          & 0 / 71 & 0 / 41 & 0 / 45 & 85 / 74 & 0 / 71 & 9 & 779 & 2.27\\
-Qwen2.5-1.5B        & 0 / 76 & 0 / 44 & 0 / 39 & 73 / 76 & 0 / 71 & 3 & 345 & 3.46\\
-\textbf{Qwen3-1.7B (final)} & 0 / \textbf{77} & 0 / \textbf{46} & 0 / \textbf{41} & 82 / \textbf{97} & 0 / \textbf{90} & \textbf{3} & 211 & 4.38\\
-SmolLM2-1.7B        & 0 / 67 & 0 / 39 & 0 / 38 & 78 / 67 & 0 / 60 & 10 & 588 & 3.76\\
-Phi-4-mini (3.8B)   & 1 / 76 & 1 / 46 & 0 / 46 & 94 / 88 & 1 / 88 & 0 & 744 & 7.90\\
-Qwen3-4B            & 0 / 79 & 0 / 47 & 0 / 38 & 98 / 115 & 0 / 104 & 1 & 666 & 8.57\\
+Gemma-3-270M      & 0 / 50 & 0 / 36 & 35 / 30 & 0 / 24 & 25 & 0.6\\
+Qwen3-0.6B        & 0 / 73 & 0 / 36 & 74 / 66 & 0 / 51 & 7 & 1.7\\
+Gemma-3-1B        & 0 / 71 & 0 / 45 & 85 / 74 & 0 / 71 & 9 & 2.3\\
+Qwen2.5-1.5B      & 0 / 76 & 0 / 39 & 73 / 76 & 0 / 71 & 3 & 3.5\\
+\textbf{Qwen3-1.7B (final)} & 0 / \textbf{77} & 0 / \textbf{41} & 82 / \textbf{97} & 0 / \textbf{90} & \textbf{3} & 4.4\\
+SmolLM2-1.7B      & 0 / 67 & 0 / 38 & 78 / 67 & 0 / 60 & 10 & 3.8\\
+Phi-4-mini (3.8B) & 1 / 76 & 0 / 46 & 94 / 88 & 1 / 88 & 0 & 7.9\\
+Qwen3-4B          & 0 / 79 & 0 / 38 & 98 / 115 & 0 / 104 & 1 & 8.6\\
 \bottomrule
 \end{tabular}
-\end{adjustbox}
 \end{table}
-Each cell shows base\,/\,LoRA. Base models score 0 on placement because they never write the phrase on its own line. These zeros are measured results, not missing runs.
-For example, the Qwen3-1.7B base model omits the phrase in 120 of 128 replies and writes it inline in the other 8.
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{figures/model_families.pdf}
-\caption{Left: answer accuracy of each base model and its LoRA adapter. Right: placement and answer both correct after LoRA (dashed line: target of 80).}
+\caption{Left: answer accuracy before and after LoRA. Right: both correct after LoRA (dashed line: target).}
 \label{fig:families}
 \end{figure}
 
-\paragraph{Findings.}
-\begin{itemize}
-\item \textbf{The placement rule transfers to every family.} With 1,826 examples and 160 steps, every model of 1B parameters or more puts the phrase first on 67--79 of 80 prompts and last on 38--46 of 48 opt-outs.
-Only Gemma-3-270M is too small: it makes 25 false opt-outs.
-\item \textbf{Answer accuracy separates the models.} The LoRA \emph{lowers} answer accuracy for Gemma-3-1B (85 to 74), SmolLM2 (78 to 67), Phi-4-mini (94 to 88), Qwen3-0.6B (74 to 66) and Gemma-3-270M (35 to 30).
-It \emph{raises} it for Qwen3-1.7B (82 to 97) and Qwen3-4B (98 to 115).
-The Qwen3 base models write long step-by-step replies that hit the 64-token limit before the answer, and the adapter's terse format recovers those answers.
-For the other families, the short-answer training data costs some knowledge.
-\item \textbf{Qwen3-1.7B is the only model under 2B that meets every target.} Of the larger models, Qwen3-4B (104) is better on every metric except opt-outs.
-Phi-4-mini has the cleanest placement (46/48 opt-outs, 0 false opt-outs) but loses answers to the shorter format (88 both correct). It needs about twice the memory and three to four times the training time.
-\end{itemize}
-
-\subsection{Seeds, deployment and a prompting reference}
 \begin{table}[!htbp]
 \centering\small
-\caption{Robustness and reference runs (128 evaluation prompts). $^\ast$The system-prompt run breaks the assignment rule (a system prompt that supplies the phrase), so it is a reference point only.}
+\caption{Robustness and a prompting reference (128 prompts). $^\ast$Breaks the rules (a system prompt supplies the phrase), so it is a reference only.}
 \label{tab:extra}
-\begin{adjustbox}{max width=\linewidth}
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Run & First /80 & Keep /48 & Opt-out /48 & Answer /128 & Both /128 & F.O.\\
+Run & First /80 & Opt-out /48 & Answer /128 & Both /128 & F.O.\\
 \midrule
-Qwen3-1.7B + LoRA, seed 660 (final) & 77 & 46 & 41 & 97 & 90 & 3\\
-Qwen3-1.7B + LoRA, seed 1           & 74 & 44 & 43 & 93 & 85 & 6\\
-Qwen3-1.7B + LoRA, seed 2           & 72 & 43 & 42 & 99 & 88 & 8\\
-Final model, Q4\_K\_M GGUF in Ollama, all 128 & 75 & 45 & 39 & 93 & 84 & 5\\
-Qwen3-1.7B base + rule as system prompt$^\ast$ & 19 & 18 & 14 & 87 & 22 & 27\\
+Final adapter, seed 660            & 77 & 41 & 97 & 90 & 3\\
+Same recipe, seed 1                & 74 & 43 & 93 & 85 & 6\\
+Same recipe, seed 2                & 72 & 42 & 99 & 88 & 8\\
+Final model as Q4\_K\_M GGUF (Ollama) & 75 & 39 & 93 & 84 & 5\\
+Base model + rule as system prompt$^\ast$ & 19 & 14 & 87 & 22 & 27\\
 \bottomrule
 \end{tabular}
-\end{adjustbox}
 \end{table}
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.88\linewidth]{figures/robustness_and_reference.pdf}
-\caption{Seeds, the quantised deployment and the prompting reference: placement and answer both correct.}
-\end{figure}
+
+\textbf{Findings.}
 \begin{itemize}
-\item \textbf{The result is robust to the seed.} Seeds 660, 1 and 2 all meet all five targets: both correct 90, 85 and 88 (mean 87.7).
-\item \textbf{Quantisation cost.} The Q4\_K\_M GGUF loses 6 both-correct items (90 to 84) but still meets every target.
-\item \textbf{Fine-tuning is necessary.} Stating the rule in a system prompt gives only 22/128 both correct.
-The base model writes the phrase inline (39 replies), repeats it, or puts it last on keep requests (27 false opt-outs).
+\item \textbf{Every model of 1B parameters or more learns the placement rule}, but the short-answer training lowers answer accuracy for Gemma, SmolLM2 and Phi. It raises it for Qwen3, whose base replies are cut off at 64 tokens.
+\item \textbf{Qwen3-1.7B is the only model under 2B that meets every target.} Qwen3-4B is stronger (104) but needs twice the memory.
+\item \textbf{The result is stable}: all three seeds and the 4-bit GGUF meet every target.
+\item \textbf{Fine-tuning is needed}: stating the rule in a system prompt gives only 22/128.
 \end{itemize}
 
-\paragraph{Testing.} \texttt{tests/test\_score.py} contains 14 unit tests for the scorer: placement edge cases (whitespace, missing, repeated, inline, phrase inside JSON, wrong case), the prefix/suffix mapping, accepted equivalents, whole-token number matching, JSON key and type checks, and agreement between the summaries and a recount of the per-prompt rows.
-Writing these tests caught one scorer bug: \texttt{9} matched inside \texttt{9.5}. I fixed it before reporting, and no reported number changed.
-
+%=====================================================================
 \FloatBarrier
-\section{Links (accessible to course staff)}
+\section{Links}
 \begin{itemize}
-\item Code, notebook, data (v1, v2 train/dev/dev\_heldout), run metadata, 3$\times$128 raw replies with per-prompt scores, dev replies, Ollama demo output: \LinkRepo
-\item Final LoRA adapter (and initial adapter): \LinkAdapter
-\item Q4\_K\_M GGUF, Modelfile and eight-prompt Ollama run: \LinkGGUF
-\item Runnable notebook: \texttt{notebooks/DSEG660\_LoRA\_pipeline.ipynb} in the repository folder.
+\item Code, notebook, data, run settings, all raw replies with per-prompt scores:\\ \url{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting}
+\item Final and initial adapters, Q4\_K\_M GGUF, Modelfile:\\ \url{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}
 \end{itemize}
-To reproduce, run \texttt{scripts/00\_setup\_env.sh}, then \texttt{01\_make\_data.py} (\texttt{--version v1}, then \texttt{v2}), \texttt{02\_train.py}, \texttt{07\_run\_eval.sh}, \texttt{05\_export\_gguf.sh} and \texttt{06\_ollama\_demo.py}.
-The extra experiments are \texttt{08\_extra\_experiments.sh}, \texttt{10\_other\_families.sh} and \texttt{09\_summarise.py}; the tests run with \texttt{pytest tests}. The exact commands are in the repository README.
 
 \end{document}
