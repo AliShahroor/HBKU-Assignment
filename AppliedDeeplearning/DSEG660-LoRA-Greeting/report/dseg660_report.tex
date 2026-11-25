@@ -70,7 +70,7 @@ Each question becomes \textbf{8 matched variants} that share the same question a
 ordinary, omit details, keep, negated keep, keep with a content restriction, opt-out, opt-out quoting the phrase, and ``omit it entirely''.
 Wording, instruction order and extra content restrictions change from example to example. Table~\ref{tab:match} shows one complete group.
 
-\begin{table*}[t]
+\begin{table*}[!t]
 \centering\small
 \begin{tabularx}{\textwidth}{@{}L{3.1cm}XL{2.8cm}@{}}
 \toprule
@@ -217,7 +217,7 @@ False opt-outs      & -- & 0 & 13 & \textbf{3} & \\
 The base model scores 0 on placement because it never writes the phrase on its own line.
 Its answer score (82) is low mainly because it explains step by step and runs out of tokens before reaching the answer.
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.8\textwidth]{figures/main_results.pdf}
 \caption{Share of evaluation prompts correct per metric. Black ticks are the targets.}
@@ -276,7 +276,7 @@ Runtime settings in Ollama 0.40.17 (CUDA backend on the A16, called through \tex
 On the eight \texttt{deployment\_check} prompts, 5 of 8 replies match the adapter exactly (Table~\ref{tab:deploy}).
 The 3 differences come from 4-bit rounding: one extra false opt-out (028), plus different wrong answers on two prompts the adapter already got wrong (080, 114).
 
-\begin{table*}[t]
+\begin{table*}[!t]
 \centering\small
 \begin{tabularx}{\textwidth}{@{}lXL{3.3cm}L{3.3cm}c@{}}
 \toprule
@@ -302,7 +302,7 @@ ID & Prompt (shortened) & Ollama Q4\_K\_M & Adapter (bf16) & Same\\
 Every model with at least 1B parameters learns the placement rule. The difference is answer accuracy: the short-answer training hurts Gemma, SmolLM2 and Phi, but helps Qwen3, whose base replies get cut off at 64 tokens.
 Qwen3-1.7B is the only model under 2B that meets every target.
 
-\begin{table*}[t]
+\begin{table*}[!t]
 \centering\small
 \begin{tabular}{lrrrrrr}
 \toprule
@@ -322,31 +322,34 @@ Qwen3-4B          & 0 / 79 & 0 / 38 & 98 / 115 & 0 / 104 & 1 & 8.6\\
 \label{tab:families}
 \end{table*}
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{figures/model_families.pdf}
 \caption{Left: answer accuracy before and after LoRA. Right: prompts with placement and answer both correct after LoRA (dashed line: target).}
 \label{fig:families}
 \end{figure*}
 
-\textbf{Seeds, 4-bit and prompting.} Two more seeds and the 4-bit GGUF also meet every target (Table~\ref{tab:extra}).
-Writing the rule as a system prompt, with no fine-tuning, gives only 22/128.
-That breaks the assignment rules, so it is shown only for reference; it confirms that fine-tuning is needed.
+\textbf{Other runs.} Table~\ref{tab:extra} shows four more checks on the final recipe.
+Two more seeds and the 4-bit GGUF also meet every target.
+Writing the rule as a system prompt, with no fine-tuning, gives only 22/128; this breaks the assignment rules, so it is shown only for reference, and it confirms that fine-tuning is needed.
 
 \begin{table}[t]
-\centering\small
-\begin{tabular}{lrrr}
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
 \toprule
-Run & Answer & Both & F.O.\\
+Run & First & Opt-out & Answer & Both & F.O.\\
+ & /80 & /48 & /128 & /128 & \\
 \midrule
-Final, seed 660          & 97 & 90 & 3\\
-Seed 1                   & 93 & 85 & 6\\
-Seed 2                   & 99 & 88 & 8\\
-Q4\_K\_M GGUF (Ollama)   & 93 & 84 & 5\\
-System prompt only$^\ast$ & 87 & 22 & 27\\
+Final, seed 660           & 77 & 41 & 97 & 90 & 3\\
+Seed 1                    & 74 & 43 & 93 & 85 & 6\\
+Seed 2                    & 72 & 42 & 99 & 88 & 8\\
+Q4\_K\_M GGUF (Ollama)    & 75 & 39 & 93 & 84 & 5\\
+DPO + SFT loss            & 49 & 35 & 92 & 63 & 5\\
+System prompt only$^\ast$ & 19 & 14 & 87 & 22 & 27\\
 \bottomrule
 \end{tabular}
-\caption{Robustness runs (128 prompts; F.O.\ = false opt-outs). $^\ast$Reference only.}
+\caption{Other runs on the evaluation set (F.O.\ = false opt-outs). $^\ast$Reference only; it breaks the assignment rules.}
 \label{tab:extra}
 \end{table}
 
@@ -355,22 +358,7 @@ I reused the same data as preference pairs: the chosen reply has the correct pla
 LoRA settings, steps and seed match the SFT runs (LR $5{\times}10^{-5}$, $\beta{=}0.1$, RPO weight 1.0).
 I checked that MS-SWIFT's \texttt{qwen3} template with thinking disabled matches the evaluation template token for token.
 The DPO run took 738\,s and used 6.7\,GB at peak, because it also runs a reference model.
-
-\begin{table}[t]
-\centering\small
-\begin{tabular}{lrrrr}
-\toprule
-Run (v2 data) & First & Opt-out & Both & Rep.\\
-\midrule
-SFT (final)      & 77 & 41 & \textbf{90} & 1\\
-DPO + SFT loss   & 49 & 35 & 63 & 20\\
-\bottomrule
-\end{tabular}
-\caption{SFT vs.\ DPO on the same data (128 prompts; Rep.\ = replies with the phrase repeated).}
-\label{tab:dpo}
-\end{table}
-
-DPO did much worse (63 vs.\ 90 fully correct; Table~\ref{tab:dpo}). It separated chosen from rejected almost perfectly during training, but at test time it often does not stop:
+DPO did much worse (63 vs.\ 90 fully correct; Table~\ref{tab:extra}). It separated chosen from rejected almost perfectly during training, but at test time it repeated the phrase and the answer in 20 of 128 replies:
 \begin{lstlisting}
 What is 31 multiplied by 4?  -> I like DSEG660\n124\nI like DSEG660\n124
 \end{lstlisting}
@@ -381,35 +369,24 @@ For this exact formatting rule, plain supervised training on the correct reply w
 
 
 %=====================================================================
-\section{Reproducibility}
+\section{Reproducibility and links}
 The repository contains the data generator, training, evaluation and scoring scripts, the training and dev data, every run's settings, time and memory, all raw replies with per-prompt scores, unit tests for the scorer, and a runnable notebook.
-The adapters and the GGUF are attached to a release.
 Running the scripts in order regenerates exactly the same data (I checked this byte for byte). Retraining with the same seed should give a very similar adapter, but GPU training is not guaranteed to be bit-for-bit repeatable, and I did not repeat seed 660.
+
 \textbf{Batch size.} My evaluation runs generate 32 prompts at a time with greedy decoding. Re-running the final adapter one prompt at a time changes 2 of the 128 replies (a wrong answer on one prompt and one extra false opt-out) and gives 76/80, 46/48, 41/48, 96/128 and 88/128 fully correct. All five targets are still met, but exact counts can move by a few prompts with the batch size.
 
-\section*{Links}
-\noindent Repository: \url{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting}
-
-\noindent Release with the adapters and GGUF: \url{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}
-
-\begin{table*}[t]
-\centering\small
-\begin{tabular}{@{}p{5.2cm}p{10.4cm}@{}}
-\toprule
-Item & Location\\
-\midrule
-Runnable notebook & \href{https://github.com/AliShahroor/HBKU-Assignment/blob/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/notebooks/DSEG660_LoRA_pipeline.ipynb}{\texttt{notebooks/DSEG660\_LoRA\_pipeline.ipynb}}\\
-Code (training, evaluation, scoring, export) & \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/scripts}{\texttt{scripts/}}, tests in \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/tests}{\texttt{tests/}}\\
-Training and development data & \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/data}{\texttt{data/v1/}} and \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/data}{\texttt{data/v2/}} (train, dev, dev\_heldout)\\
-Saved adapters (final and initial) & \href{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}{release \texttt{dseg660-lora-v1.0}}: \texttt{dseg660-final-adapter.zip}, \texttt{dseg660-initial-adapter.zip}\\
-128 raw replies per run with per-prompt scores & \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/eval/test}{\texttt{eval/test/}}: \texttt{base}, \texttt{initial}, \texttt{final} (\texttt{*.scored.jsonl}, field \texttt{raw\_reply}), and \texttt{all\_runs\_per\_prompt\_scores.csv}\\
-4-bit GGUF and Modelfile & \href{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}{release \texttt{dseg660-lora-v1.0}}: \texttt{dseg660-qwen3-1.7b-Q4\_K\_M.gguf}, \texttt{Modelfile}\\
-Eight-prompt Ollama run & \href{https://github.com/AliShahroor/HBKU-Assignment/blob/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/deploy/ollama_deployment_check.jsonl}{\texttt{deploy/ollama\_deployment\_check.jsonl}}\\
-Using the adapter on fresh prompts & \href{https://github.com/AliShahroor/HBKU-Assignment/blob/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/MODEL_CARD.md}{\texttt{MODEL\_CARD.md}}\\
-\bottomrule
-\end{tabular}
-\caption{Where to find each required item (paths are inside the repository above).}
-\end{table*}
+\textbf{Where to find each item.}
+Repository: \url{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting}.
+Release (adapters, GGUF, Modelfile): \url{https://github.com/AliShahroor/HBKU-Assignment/releases/tag/dseg660-lora-v1.0}.
+\begin{itemize}
+\item Notebook: \href{https://github.com/AliShahroor/HBKU-Assignment/blob/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/notebooks/DSEG660_LoRA_pipeline.ipynb}{\texttt{notebooks/\allowbreak DSEG660\_LoRA\_pipeline.ipynb}}
+\item Code: \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/scripts}{\texttt{scripts/}} and tests in \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/tests}{\texttt{tests/}}
+\item Training and dev data (v1, v2): \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/data}{\texttt{data/}}
+\item 128 raw replies per run with per-prompt scores (field \texttt{raw\_reply}): \href{https://github.com/AliShahroor/HBKU-Assignment/tree/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/eval/test}{\texttt{eval/test/}}
+\item Final and initial adapters, 4-bit GGUF and Modelfile: the release above
+\item Eight-prompt Ollama run: \href{https://github.com/AliShahroor/HBKU-Assignment/blob/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/deploy/ollama_deployment_check.jsonl}{\texttt{deploy/\allowbreak ollama\_deployment\_check.jsonl}}
+\item Using the adapter on fresh prompts: \href{https://github.com/AliShahroor/HBKU-Assignment/blob/main/AppliedDeeplearning/DSEG660-LoRA-Greeting/MODEL_CARD.md}{\texttt{MODEL\_CARD.md}}
+\end{itemize}
 
 \bibliography{references}
 
