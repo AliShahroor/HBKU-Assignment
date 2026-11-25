@@ -32,7 +32,7 @@ and on the **last line** when the user explicitly opts out.
 - The same recipe was applied to 7 more models (Gemma-3, Qwen2.5, SmolLM2, Phi-4-mini, Qwen3 0.6B/4B). Qwen3-1.7B is the only model under 2B that meets every target.
 - Results are stable across 3 seeds and after 4-bit quantisation.
 - Prompting alone (the rule given as a system prompt) gets only 22/128.
-- DPO with MS-SWIFT on the same data as preference pairs gets 63/128: the model often repeats itself instead of stopping, so plain supervised training fits this task better.
+- DPO with MS-SWIFT on the same data as preference pairs gets 63/128: in my single untuned run the model often repeats itself instead of stopping, so plain supervised training fit this task better.
 
 ![models](results/figures/model_families.png)
 

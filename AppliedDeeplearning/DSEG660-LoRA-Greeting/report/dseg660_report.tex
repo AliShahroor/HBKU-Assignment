@@ -53,6 +53,7 @@ I used LoRA \citep{hu2022lora} on \texttt{Qwen/Qwen3-1.7B} \citep{qwen3}, traine
 
 \begin{figure}[h]
 \centering\scriptsize
+\resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[node distance=0.32cm,
   b/.style={draw=blue!50!black,fill=blue!6,rounded corners=2pt,align=center,inner sep=3pt,minimum height=0.75cm,text width=1.45cm},
   a/.style={-{Stealth[length=4pt]},blue!40!black}]
@@ -61,7 +62,7 @@ I used LoRA \citep{hu2022lora} on \texttt{Qwen/Qwen3-1.7B} \citep{qwen3}, traine
 \node[b,right=of t] (e) {Dev errors $\rightarrow$\\1 revision};
 \node[b,right=of e] (o) {Eval (128)\\+ Ollama};
 \draw[a] (d)--(t); \draw[a] (t)--(e); \draw[a] (e)--(o);
-\end{tikzpicture}
+\end{tikzpicture}}
 \end{figure}
 
 %=====================================================================
@@ -101,7 +102,7 @@ Data & Questions & Prompts & Role\\
 \midrule
 Training (v2)  & 166 & 1{,}826 & fine-tuning\\
 Dev            & 42  & 336 & selection\\
-Dev, new wording & 42 & 336 & selection\\
+Dev, new wording & same 42 & 336 & selection\\
 Evaluation     & 16  & 128 & final test\\
 \bottomrule
 \end{tabular}
@@ -345,9 +346,10 @@ DPO did much worse (63 vs.\ 90 fully correct; Table~\ref{tab:dpo}). It separated
 \begin{lstlisting}
 What is 31 multiplied by 4?  -> I like DSEG660\n124\nI like DSEG660\n124
 \end{lstlisting}
-The reason is that each chosen/rejected pair contains the same answer and the same end-of-reply token, and differs only in where the phrase sits.
-Pushing the rejected reply down also lowers the chance of ending the reply, so the model repeats itself.
-For an exact formatting rule, plain supervised training on the correct reply is the better fit.
+A likely reason, which I did not test, is that each chosen/rejected pair contains the same answer and the same end-of-reply token and differs only in where the phrase sits.
+Pushing the rejected reply down may then also lower the chance of ending the reply, so the model keeps going.
+I ran DPO with one setting and did not tune it, so this shows that DPO with these settings did worse, not that DPO cannot work.
+For this exact formatting rule, plain supervised training on the correct reply was the better fit.
 
 
 %=====================================================================
