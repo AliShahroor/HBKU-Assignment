@@ -26,11 +26,11 @@
 
 \title{Fine-Tuned AI Chatbot: Teaching Qwen3-1.7B the DSEG660 Greeting with LoRA}
 \author{Ali Shahroor \\
-  College of Science and Engineering \\
+  DSEG660 Applied Deep Learning \\
   Hamad Bin Khalifa University
   \And
-  Dr.\ Yin Yang (Course Instructor) \\
-  Professor in Data Science \\
+  Dr.\ Yin Yang \\
+  College of Science and Engineering \\
   Hamad Bin Khalifa University \\
   \texttt{yyang@hbku.edu.qa}}
 
@@ -244,7 +244,8 @@ For answers, short replies help on factual questions but hurt on tasks that need
 
 %=====================================================================
 \section{Deployment}
-I merged the final adapter into the base model at the pinned revision, converted it with llama.cpp \citep{llamacpp}, and quantised it to \textbf{Q4\_K\_M} (1.1\,GB).
+I followed the steps of the Unsloth GGUF guide \citep{unslothgguf} (merge, convert with llama.cpp \citep{llamacpp}, quantise), but ran them by hand so the merge uses the exact pinned checkpoint.
+I merged the final adapter into the base model, quantised it to \textbf{Q4\_K\_M} (1.1\,GB), and imported it into Ollama with a Modelfile \citep{ollamaimport}.
 In Ollama 0.40.17 I used the Qwen3 non-thinking template, no system prompt, temperature 0, 64 new tokens and seed 660.
 On the eight \texttt{deployment\_check} prompts, 5 of 8 replies match the adapter exactly (Table~\ref{tab:deploy}).
 The 3 differences come from 4-bit rounding: one extra false opt-out (028), plus different wrong answers on two prompts the adapter already got wrong (080, 114).
