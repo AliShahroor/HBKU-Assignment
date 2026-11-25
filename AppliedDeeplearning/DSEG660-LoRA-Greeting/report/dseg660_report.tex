@@ -76,8 +76,8 @@ Observed placement & -- & \multicolumn{3}{l}{base: 120 missing, 8 inline} & \\
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\linewidth]{figures/main_results.png}
-\caption{Evaluation results as fractions; the red line is each target.}
+\includegraphics[width=\linewidth]{figures/main_results.pdf}
+\caption{Evaluation results per metric (counts). Dashed lines are the targets.}
 \label{fig:main}
 \end{figure}
 \begin{table}[!htbp]
@@ -373,8 +373,8 @@ For example, the Qwen3-1.7B base model omits the phrase in 120 of 128 replies an
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.85\linewidth]{figures/model_families.png}
-\caption{Placement and answer both correct, base model vs.\ the same LoRA recipe. The red line is the target of 80.}
+\includegraphics[width=\linewidth]{figures/model_families.pdf}
+\caption{Left: answer accuracy of each base model and its LoRA adapter. Right: placement and answer both correct after LoRA (dashed line: target of 80).}
 \label{fig:families}
 \end{figure}
 
@@ -411,7 +411,7 @@ Qwen3-1.7B base + rule as system prompt$^\ast$ & 19 & 18 & 14 & 87 & 22 & 27\\
 \end{table}
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.8\linewidth]{figures/robustness_and_reference.png}
+\includegraphics[width=0.88\linewidth]{figures/robustness_and_reference.pdf}
 \caption{Seeds, the quantised deployment and the prompting reference: placement and answer both correct.}
 \end{figure}
 \begin{itemize}
