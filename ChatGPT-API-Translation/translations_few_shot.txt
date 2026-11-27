@@ -1,0 +1,200 @@
+The service/transportation was delayed, so I got to the lecture late while I was in a rush to the lab.
+We have to check the errors for each tag before submitting on the computer.
+When we finished the training, we saved the model and tested it on the evaluation, on the mobile.
+The programmer discovered a new bug that affected all the results on the computer.
+The programmer found a bug that had an impact on all the results at home.
+When the training was finished, we saved the report and tested it at the university during the exam.
+Now I want to try the algorithm on a lot of data with my friend.
+The bus was delayed, so I got to the lecture and I’m in a hurry on the phone.
+Tomorrow we will present the project in front of the class and explain the design with my friend.
+Today the network was slow, so I had to share the internet from my phone in the library.
+The programmer discovered a new error that affected all the results in the library.
+Today, the network was slow, so I had to share my phone's internet with my friend.
+The professor explained the language model, and then asked us how to predict the word at home.
+I forgot the password, so I asked the system to change it on the phone.
+Not every high score means the classifier is excellent in the lab.
+My friend suggested we use Python because it’s easier for the university project.
+Now I want to try the algorithm on new images at home.
+Where did you save the report that I sent yesterday with my friend?
+The server is still down, and we can’t, with my friend, log into the website.
+Why isn’t the code working on my device in the library?
+When the training was over, we saved the file and tested it on the exam in the lab.
+The experiment can be repeated because the seed and settings are saved at home.
+After the workday ended, we sat in the library to continue our AI homework in the lab.
+I forgot the password, so I asked the website to change it with the team.
+We have to check the errors according to each tag before handing in the lab.
+The professor explained the language model, and then he asked us to how it predicts the word with my friend.
+The service bus was delayed, so I got to the lab later, and I was in a rush with the team.
+The student asked the team what the difference is between training and the test.
+We made a backup before we updated the database in the mobile app.
+The programmer discovered a small glitch that affected all the results in the university.
+Today, the network was slow, so I had to share the internet from my phone with the team.
+The bus was delayed, so I got to the lecture late while I was in a hurry at the university.
+Now I want to try the algorithm on many texts with the team.
+We’ll send the report to the professor after we review the results on the mobile.
+Why isn’t the code working on my device with the team?
+The server is still down and we’re not able to log in to the platform on the computer.
+We made a confusion matrix so we could know where the model was wrong in the lab.
+In the lab, we worked on the model and measured the accuracy and the recall in the library.
+The student asked what the difference is between training and testing in mobile.
+We made a confusion matrix so we could know where the classifier was making mistakes at the university.
+Tomorrow we’re going to present the project in front of the class and explain the design in the library.
+In the lab, we tested the system and measured the accuracy and recall at the university.
+Why isn’t the code working on my computer device?
+My friend suggested that we use Python because it’s easier for the project with my friend.
+Tomorrow we will present the project in front of the class and explain the design on the computer.
+Today the network was slow, so I had to share the internet from my phone at home.
+I wrote the documentation so that every student can repeat the experiment at home.
+Where did you save the file I sent yesterday at the university?
+We’re going to send the report to the professor after we review the results on the computer.
+The new data includes Palestinian words from what the students said in the library.
+The new data contains Palestinian words from what the students said at home.
+We’re going to send the report to the doctor after we review the results with the team.
+After work, we sat in the library to continue our AI homework with the team.
+The new data includes Palestinian words from what the students said on the mobile.
+Where did you save the report that you sent yesterday with the team?
+The professor explained the language model, and then asked us how it predicts the word in the lab.
+The bus was delayed, so I arrived at the lecture while I was rushing, with my friend.
+Why isn’t the code working on my device at the university?
+The professor explained the language model, and then asked us to see how it predicts the word based on the library.
+The programmer discovered a small bug that affected all the results with my friend.
+After work, we sat in the library to continue our AI homework on the computer.
+Today the network was slow, so I had to share the internet from my mobile phone.
+Where did you save the report I sent you yesterday on the computer?
+I wrote the documentation so that every student can repeat the experiment with my friend.
+Not every high grade result means the classifier is excellent at home.
+After the end of work, we stayed in the library to continue our university AI homework.
+The server is still down, and we can’t access the website from the library.
+I forgot the password, so I asked the app to change it in the library.
+Where did you save the code I sent yesterday in the lab?
+When the training was finished, we saved the file and tested it on the exam with my friend.
+Tomorrow we will present the application in front of the class and explain the design at the university.
+The new data contains Palestinian words from the students’ talk on the computer.
+Not every high score means the team’s category leader is excellent.
+We have to check the errors according to each tag before submitting to the library.
+Now I want to test the algorithm on a lot of data on the computer.
+Where did you save the report that you sent yesterday at home?
+I wrote the documentation so that every student can repeat the experiment on mobile.
+We’ll send the report to the professor after we review the results at the university.
+The supervisor explained the language model, and then asked us to how it predicts the word at the university.
+The bus was late, so I arrived at the lab while I was in a hurry at the library.
+Today the network was slow, so I had to share the internet from my phone in the lab.
+Why isn’t the code working on my device in the lab?
+The experiment is repeatable because the seed and the settings are saved at the university.
+When we finished the training, we saved the model and tested it on the exam on the computer.
+We have to check the errors for each tag before submitting with my friend.
+After work, we sat in the library to continue the artificial intelligence assignment in the library.
+Now I want to try the algorithm on new texts at the university.
+The student asked my friend what the difference is between training and testing.
+We made a confusion matrix to find where the model was wrong on the mobile.
+We made a confusion matrix so we could find where the classifier was wrong with my friend.
+Where did you save the file I sent yesterday on the phone?
+The professor explained the language model, and then asked us to see how it predicts the word on a mobile.
+The experiment is repeatable because the seed and settings are saved in the lab.
+When the training was finished, we saved the model and tested it on the evaluation with the team.
+I wrote the documentation so that every student can repeat the experiment in the lab.
+We have to check the errors for each tag before submitting to mobile.
+After work, we sat in the library to finish the AI homework at home.
+I wrote the documentation so that every student can repeat the experiment on the computer.
+We want to finish the application before the deadline so the doctor doesn’t get upset with the mobile phone.
+We made a backup before we updated the database in the lab.
+We want to finish the project before the deadline so that the professor won’t get upset with my friend.
+The new data includes Palestinian words from what the students said with my friend.
+When we finished the training, we saved the file and tested it on the assessment at home.
+The server is still down, and we can’t access the university platform.
+Not every high score means the model is excellent at university.
+After work, we sat in the library to continue the artificial intelligence homework on the mobile.
+The experiment is repeatable because the seed and settings are saved on Mobile.
+We made a backup before we updated the database with my friend.
+The student asked what the difference is between training and testing in the library.
+Now I want to test the algorithm on many texts using a mobile.
+My friend suggested that we use Python because it’s easier for the project with the team.
+The programmer discovered a new error that affected all the results with the team.
+We’re going to send the report to the professor after we review the results in the library.
+We’ll send the report to the professor after we review the results with my friend.
+Why isn’t the code working on my device at home?
+I wrote the documentation so every student can repeat the experiment at the university.
+The professor explained the language model, and then asked us to see how it predicts the word on the computer.
+We want to finish the application before the deadline so the professor doesn’t get upset with the team.
+Tomorrow we’ll present the assignment in front of the class and explain the design at home.
+Tomorrow we will present the homework in front of the class and explain the design with the team.
+The supervisor explained the language model and then asked the team to show us how it predicts the word.
+I forgot the password, so I asked the website to change it on the computer.
+I forgot my password, so I asked the system to change it in the lab.
+I wrote the documentation so that every student can repeat the experiment in the library.
+I forgot my password, so I asked the university site to change it.
+We’re going to send the report to the professor after we review the results at home.
+The student asked what the difference is between training and testing at home.
+The student asked what the difference is between training and an exam on the computer.
+Tomorrow we will present the project in front of the class and explain the design in the lab.
+We’re going to send the report to the professor after we review the results in the lab.
+The server is still down, and we can’t log into the system in the lab.
+The server is still down and we can’t log into the system from home.
+In the lab, we tested the model and measured accuracy and recall at home.
+We want to finish the assignment before the deadline so the supervisor doesn’t get upset at home.
+We made a backup before we updated the database with the team.
+The bus was delayed, so I got to the lecture while I was rushing to the computer.
+We want to finish the application before the deadline so the supervisor won’t get mad at the computer.
+The new data includes Palestinian words from what the students said in the lab.
+The server is still down, and we can’t log in to the system from the mobile.
+We made a backup before we updated the database at home.
+My friend suggested we use Java because it’s easier for the project in the lab.
+We made a confusion matrix so we could figure out where the classifier is wrong at home.
+My friend suggested we use Python because it’s easier for the project with the library.
+We want to finish the project before the deadline so the professor doesn’t get upset at the university.
+We made a confusion matrix so we could tell where the classifier went wrong in the library.
+We want to finish the project before the deadline so the supervisor doesn’t get upset at the library.
+Now I want to try the algorithm on many texts in the library.
+We made a backup before we updated the database on the computer.
+Why isn’t the code working on my device with my friend?
+In the lab, we tested the model and measured accuracy and recall with the team.
+The server is still down, and we can’t access the platform with the team.
+Not every high result means the model is excellent with my friend.
+The experiment is repeatable because the seed and settings are saved on the computer.
+We need to check the errors for each tag before submitting at the university.
+We made a backup before we updated the university database.
+We have to check the errors according to each tag before submitting with the team.
+Today the network was slow, so I had to share internet from my phone to the computer.
+I forgot my password, so I asked the system to change it with my friend.
+At the university, we ran the system and measured the accuracy and the recall on the computer.
+The bus was delayed, so I arrived at the lecture while I was rushing home.
+We want to finish the assignment before the deadline so the professor doesn’t get upset in the lab.
+The experiment is repeatable because the seed and settings are saved in the library.
+Where did you save the file I sent yesterday in the library?
+Why isn’t the code working on my mobile device?
+In the lab, we ran the system and measured accuracy and recall on the mobile.
+Not every high score means the grader is excellent on the computer.
+Now I want to test the algorithm on a lot of images in the lab.
+At the library, we found the classifier and measured precision and recall with my friend.
+The programmer discovered a new bug, but it affected all the results in the lab.
+My friend suggested that we use Python because it’s easier for the mobile project.
+The experiment is reproducible because the seed and settings are saved with the team.
+My friend suggested that we use Python because it’s easier for the project at home.
+We made a confusion matrix so we could figure out where the model was wrong with the team.
+The experiment is reproducible because the seed and settings are saved with my friend.
+Not every high score means the classifier is excellent in mobile.
+I forgot my password, so I asked the site to change it at home.
+We made a backup before we updated the database in the library.
+I wrote the documentation so every student can redo the experiment with the team.
+We have to check the errors for each tag before submitting at home.
+When the training finished, we saved the classifier and tested it on the exam in the library.
+In the lab, we tested the system and measured the accuracy and recall in the lab.
+The student asked what the difference is between training and testing in the lab.
+The new data contains Palestinian words from what the students at the university were saying.
+We made a confusion matrix so we could figure out where the classifier was wrong on the computer.
+After the workday was over, we sat in the library to continue our artificial intelligence homework with my friend.
+Today, the network was slow, so I had to share the internet from my phone at the university.
+The new data includes Palestinian words from the students’ talk with the team.
+The student asked what the difference is between training and testing at the university.
+Tomorrow we will present the project in front of the class and explain the design on the mobile.
+My friend suggested we use Java because it’s easier for the project on the computer.
+Not every high result means the model is excellent in the library.
+The programmer discovered a new bug but it affected all the results in the mobile.
+Yesterday after work I went to the market with my sister, and we bought vegetables for the house. Then we sat with our neighbors, drank coffee, and talked about the university and the projects.
+This morning I woke up early because I have a lecture, but the bus was late, so I went to the university and I was in a hurry, and I’m telling my friend to wait for me at that door.
+At night, my mother made mqluba and salad, and we ate dinner with the neighbors together. After the meal, we drank tea, sat and talked, and laughed until it got late.
+On Friday, we all went out together—may God protect them?—to visit our relatives, we walked around the city, bought kunafa, and we returned home before Maghrib because the streets were very crowded.
+The student wrote the function and the student checked the tests on the computer.
+The internet went out halfway through the exam, so I spoke with technical support with the team.
+The project team met at the library so the team could solve a memory problem.
+The student wrote the function, and the student checked the exams with my friend.

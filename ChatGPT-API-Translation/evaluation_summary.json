@@ -1,0 +1,96 @@
+{
+  "dataset": {
+    "source_sentences": 200,
+    "evaluation_references": 20,
+    "source_language": "Palestinian Arabic",
+    "target_language": "English"
+  },
+  "models": {
+    "main": "openai/gpt-5.4-nano",
+    "optional_free": "baidu/ernie-5.5-flash-preview:free"
+  },
+  "quality_on_20_references": {
+    "openai_zero_shot": {
+      "bleu": 59.42,
+      "chrf2_plus_plus": 76.49
+    },
+    "openai_few_shot": {
+      "bleu": 68.37,
+      "chrf2_plus_plus": 81.63
+    },
+    "free_zero_shot": {
+      "bleu": 73.76,
+      "chrf2_plus_plus": 84.33
+    },
+    "free_few_shot": {
+      "bleu": 73.71,
+      "chrf2_plus_plus": 85.12
+    }
+  },
+  "usage": {
+    "openai_zero_shot": {
+      "requests": 200,
+      "prompt_tokens": 11194,
+      "completion_tokens": 4342,
+      "cost_usd": 0.0076663,
+      "mean_latency_seconds": 1.179,
+      "median_latency_seconds": 1.108,
+      "empty_outputs": 0,
+      "arabic_leakage_outputs": 0
+    },
+    "openai_few_shot": {
+      "requests": 200,
+      "prompt_tokens": 25994,
+      "completion_tokens": 4253,
+      "cost_usd": 0.01051505,
+      "mean_latency_seconds": 1.175,
+      "median_latency_seconds": 1.126,
+      "empty_outputs": 0,
+      "arabic_leakage_outputs": 0
+    },
+    "free_zero_shot": {
+      "requests": 20,
+      "prompt_tokens": 1430,
+      "completion_tokens": 381,
+      "cost_usd": 0.0,
+      "mean_latency_seconds": 1.41,
+      "median_latency_seconds": 1.41,
+      "empty_outputs": 0,
+      "arabic_leakage_outputs": 0
+    },
+    "free_few_shot": {
+      "requests": 20,
+      "prompt_tokens": 2990,
+      "completion_tokens": 382,
+      "cost_usd": 0.0,
+      "mean_latency_seconds": 1.45,
+      "median_latency_seconds": 1.387,
+      "empty_outputs": 0,
+      "arabic_leakage_outputs": 0
+    },
+    "openai_total": {
+      "requests": 400,
+      "prompt_tokens": 37188,
+      "completion_tokens": 8595,
+      "cost_usd": 0.01818135,
+      "mean_latency_seconds": 1.177,
+      "median_latency_seconds": 1.123,
+      "empty_outputs": 0,
+      "arabic_leakage_outputs": 0
+    },
+    "free_total": {
+      "requests": 40,
+      "prompt_tokens": 4420,
+      "completion_tokens": 763,
+      "cost_usd": 0.0,
+      "mean_latency_seconds": 1.43,
+      "median_latency_seconds": 1.39,
+      "empty_outputs": 0,
+      "arabic_leakage_outputs": 0
+    }
+  },
+  "openai_prompt_difference": {
+    "different_outputs": 177,
+    "identical_outputs": 23
+  }
+}

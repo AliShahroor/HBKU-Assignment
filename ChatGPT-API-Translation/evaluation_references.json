@@ -1,0 +1,22 @@
+[
+  {"id": 1, "reference_en": "The shared taxi was late, so I arrived at the lecture in a hurry at the lab."},
+  {"id": 11, "reference_en": "The programmer discovered a new error, but it affected all the results in the library."},
+  {"id": 21, "reference_en": "When training finished, we saved the classifier and tested it on the test set in the lab."},
+  {"id": 31, "reference_en": "The network was slow today, so I had to share the internet from my phone with the team."},
+  {"id": 41, "reference_en": "Tomorrow we will present the project in front of the class and explain the design in the library."},
+  {"id": 51, "reference_en": "The new data contains Palestinian words from the students' speech at home."},
+  {"id": 61, "reference_en": "After work, we sat in the library to finish the artificial intelligence assignment on the computer."},
+  {"id": 71, "reference_en": "Tomorrow we will present the application in front of the class and explain the design at the university."},
+  {"id": 81, "reference_en": "The network was slow today, so I had to share the internet from my phone in the lab."},
+  {"id": 91, "reference_en": "Where did you save the file that I sent you yesterday on the phone?"},
+  {"id": 101, "reference_en": "We need to finish the project before the deadline so the professor does not get upset, together with my friend."},
+  {"id": 111, "reference_en": "My friend suggested that we use Python because it is easier for the project with the team."},
+  {"id": 121, "reference_en": "The supervisor explained the language model and then showed us how it predicts the word with the team."},
+  {"id": 131, "reference_en": "The server is still down, and we cannot access the system in the lab."},
+  {"id": 141, "reference_en": "My friend suggested that we use Java because it is easier for the project in the lab."},
+  {"id": 151, "reference_en": "The server is still down, and we cannot access the platform with the team."},
+  {"id": 161, "reference_en": "We need to finish the assignment before the deadline so the professor does not get upset in the lab."},
+  {"id": 171, "reference_en": "The experiment is reproducible because the seed and settings are saved with the team."},
+  {"id": 181, "reference_en": "In the lab, we trained the system and measured accuracy and recall."},
+  {"id": 191, "reference_en": "Not every high result means that the model is excellent in the library."}
+]
