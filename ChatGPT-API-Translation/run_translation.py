@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parent
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MAIN_MODEL = "openai/gpt-5.4-nano"
 FREE_MODEL = "baidu/ernie-5.5-flash-preview:free"
+SECOND_FREE_MODEL = "nvidia/nemotron-3.5-lightning:free"
 KEY_FILE = ROOT.parent.parent / "Wattbott.env"
 FEW_SHOT_EXAMPLES = [
     ("بدي أراجع المحاضرة قبل الامتحان.", "I want to review the lecture before the exam."),
@@ -89,7 +90,6 @@ def request_translation(key: str, model: str, sentence: str, mode: str) -> dict:
                 "translation": translation,
                 "prompt_tokens": usage.get("prompt_tokens", 0),
                 "completion_tokens": usage.get("completion_tokens", 0),
-                "cost_usd": usage.get("cost", 0) or 0,
                 "latency_seconds": round(latency, 3),
                 "provider": data.get("provider", ""),
                 "generation_id": data.get("id", ""),
@@ -149,14 +149,13 @@ def run_main(key: str, rows: list[dict], workers: int) -> None:
 def run_free(key: str, rows: list[dict]) -> None:
     output = ROOT / "free_results.json"
     existing = load_json(output, {})
-    evaluation_rows = [row for row in rows if row["is_evaluation"]]
     tasks = []
-    for row in evaluation_rows:
+    for row in rows:
         for mode in ("zero_shot", "few_shot"):
             task_key = f"{row['id']}:{mode}"
             if task_key not in existing:
                 tasks.append((task_key, row, mode))
-    print(f"Free model: {len(tasks)} pending of 40 requests")
+    print(f"Free model: {len(tasks)} pending of 400 requests")
     for index, (task_key, row, mode) in enumerate(tasks, start=1):
         result = request_translation(key, FREE_MODEL, row["source_ar"], mode)
         existing[task_key] = {"id": row["id"], "source_ar": row["source_ar"], "mode": mode,
@@ -164,7 +163,29 @@ def run_free(key: str, rows: list[dict]) -> None:
         save_json(output, existing)
         print(f"  saved {index}/{len(tasks)} new free translations")
         if index < len(tasks):
-            time.sleep(3.2)  # remain below the free-model 20 requests/minute limit
+            time.sleep(1.8)  # response time plus pause keeps request starts near the free-tier limit
+
+
+def run_second_free(key: str, rows: list[dict]) -> None:
+    """Run a second free model on the fixed 20-sentence evaluation subset."""
+    output = ROOT / "second_free_results.json"
+    existing = load_json(output, {})
+    evaluation_rows = [row for row in rows if row["is_evaluation"]]
+    tasks = []
+    for row in evaluation_rows:
+        for mode in ("zero_shot", "few_shot"):
+            task_key = f"{row['id']}:{mode}"
+            if task_key not in existing:
+                tasks.append((task_key, row, mode))
+    print(f"Second free model: {len(tasks)} pending of 40 requests")
+    for index, (task_key, row, mode) in enumerate(tasks, start=1):
+        result = request_translation(key, SECOND_FREE_MODEL, row["source_ar"], mode)
+        existing[task_key] = {"id": row["id"], "source_ar": row["source_ar"], "mode": mode,
+                              "model": SECOND_FREE_MODEL, **result}
+        save_json(output, existing)
+        print(f"  saved {index}/{len(tasks)} new second-free translations")
+        if index < len(tasks):
+            time.sleep(1.8)
 
 
 def export_files(rows: list[dict]) -> None:
@@ -193,6 +214,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--skip-main", action="store_true")
     parser.add_argument("--skip-free", action="store_true")
+    parser.add_argument("--skip-second-free", action="store_true")
     parser.add_argument("--workers", type=int, default=8)
     args = parser.parse_args()
     rows = load_json(ROOT / "sentences.json", [])
@@ -203,6 +225,8 @@ def main() -> None:
         run_main(key, rows, args.workers)
     if not args.skip_free:
         run_free(key, rows)
+    if not args.skip_second_free:
+        run_second_free(key, rows)
     export_files(rows)
     print("Translation files exported successfully.")
 
